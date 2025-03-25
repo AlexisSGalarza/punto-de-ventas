@@ -3,7 +3,6 @@ from PIL import Image, ImageOps, ImageDraw
 from pathlib import Path
 import os
 
-
 ventana = ctk.CTk()
 ventana.title("login-Abarrotes Gael")
 ventana.geometry("1920x1080")  
@@ -55,19 +54,6 @@ boton_login.pack(pady=40)
 # Mensaje de estado
 label_mensaje = ctk.CTkLabel(login_frame, text="", font=("Arial", 14))
 label_mensaje.pack()
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
