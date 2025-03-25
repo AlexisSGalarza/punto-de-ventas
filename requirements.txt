@@ -1,0 +1,7 @@
+customtkinter
+pandas
+sqlalchemy
+mysql-connector-python
+seaborn
+reportlab
+weasyprint
