@@ -1,7 +1,7 @@
 import customtkinter as ctk
 from PIL import Image, ImageOps, ImageDraw
 from tkinter import Scrollbar
-from datetime import datetime
+import pagar as pa
 
 
 def redondear_bordes(imagen, radio):
@@ -174,7 +174,7 @@ def tabla_encabezados(ventana):
         font=("Arial", 18, "bold"),
         fg_color="#28a745",  # Verde
         text_color="white",
-        command=lambda: mostrar_modal_pago(146.00)  # Acción del botón
+        command=lambda: pa.mostrar_modal_pago(146.00)  # Acción del botón
     )
     boton_completar.grid(row=1, column=0, padx=10, pady=10, sticky="ew")
 
@@ -217,7 +217,7 @@ def tabla_encabezados(ventana):
     )
     etiqueta_suma.grid(row=1, column=4, sticky="w")
 
-def main():
+def mainventana():
 
     ventana = ctk.CTk()
     ventana.title("Abarrotes Gael")
@@ -230,9 +230,4 @@ def main():
 
 
 
-    # Iniciar la ventana principal
-    ventana.mainloop()
-
-if __name__ == "__main__":
-    main()
 

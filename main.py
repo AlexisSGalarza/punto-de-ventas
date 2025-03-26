@@ -3,6 +3,7 @@ from PIL import Image, ImageOps, ImageDraw
 import ui
 import ui.login
 import ui.ventana_principal
+import ui.pagar
 
 
 
