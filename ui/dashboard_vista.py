@@ -43,7 +43,7 @@ def encabezado(ventana):
 
 def crear_cuadro_botones(ventana):
     """Crea un cuadro que contenga los botones de sección."""
-    cuadro_botones = ctk.CTkFrame(ventana, fg_color="#e0e0e0",width=600, height=400)  # Cuadro sin tamaño fijo para expandirse dinámicamente
+    cuadro_botones = ctk.CTkFrame(ventana, fg_color="#fcf3cf",width=600, height=400)  # Cuadro sin tamaño fijo para expandirse dinámicamente
     cuadro_botones.grid(row=1, column=0, columnspan=3, padx=10, pady=10, sticky="nsew")  # Ocupa toda la pantalla
 
     # Botón de 'Venta'
@@ -83,20 +83,20 @@ def crear_cuadro_botones(ventana):
 def crear_cuadro_inferior(ventana):
     """Crea un cuadro que contenga el botón de cerrar sesión y el pie de página."""
     # Crear el cuadro
-    cuadro_inferior = ctk.CTkFrame(ventana, fg_color="#f0f0f0", height=150, width=800)
+    cuadro_inferior = ctk.CTkFrame(ventana, fg_color="#fcf3cf", height=150, width=800)
     cuadro_inferior.grid(row=3, column=0, columnspan=3, padx=10, pady=10, sticky="ew")
 
     # Botón de cerrar sesión
     def cerrar_sesion():
         print("Has cerrado sesión.")
     boton = ctk.CTkButton(
-        cuadro_inferior, text="Cerrar sesión", command=cerrar_sesion, fg_color="gray", height=50
+        cuadro_inferior, text="Cerrar sesión", command=cerrar_sesion, fg_color="gray", height=50, text_color="black"
     )
     boton.grid(row=0, column=0, padx=20, pady=10, sticky="ew")
 
     # Pie de página
     hora_fecha = ctk.CTkLabel(
-        cuadro_inferior, text="07:05 p.m. - 23/03/2025", font=("Arial", 14, "italic"), text_color="gray"
+        cuadro_inferior, text="07:05 p.m. - 23/03/2025", font=("Arial", 14, "italic"), text_color="black"
     )
     hora_fecha.grid(row=1, column=0, padx=20, pady=10, sticky="ew")
 
@@ -107,14 +107,12 @@ def crear_cuadro_inferior(ventana):
 
 
 
-def main():
-    """Función principal para ejecutar la aplicación."""
-    ctk.set_appearance_mode("light")
-    ctk.set_default_color_theme("blue")
-    
+def maindashboard():
     ventana = ctk.CTk()
-    ventana.title("Mi Aplicación")
-    ventana.geometry("1920x1080")
+    ventana.title("Abarrotes Gael")
+    ventana.geometry("1920x1080")  # Tamaño de la ventana
+    ventana.configure(fg_color="#fcf3cf")
+    ventana.attributes('-fullscreen', True)
 
     encabezado(ventana)
     crear_cuadro_botones(ventana)
@@ -124,4 +122,4 @@ def main():
 
 # Ejecutar la aplicación
 if __name__ == "__main__":
-    main()
+    maindashboard()

@@ -47,10 +47,6 @@ def ventana_login(ventana):
     entry_contrasena = ctk.CTkEntry(login_frame, width=400, height=30, fg_color="white", text_color="black" , border_color="#f4d03f", show="*")  # Oculta el texto de la contraseña
     entry_contrasena.pack(pady=10)
 
-    # Botón de inicio de sesión
-    boton_login = ctk.CTkButton(login_frame, text="Iniciar Sesión", corner_radius=10, fg_color="#f4d03f", text_color="black", width=400, height=30)
-    boton_login.pack(pady=40)
-
     # Mensaje de estado
     label_mensaje = ctk.CTkLabel(login_frame, text="", font=("Arial", 14))
     label_mensaje.pack()
@@ -65,7 +61,7 @@ def ventana_login(ventana):
             label_mensaje.configure(text="Usuario o contraseña incorrectos", text_color="red")
 
     boton_login = ctk.CTkButton(login_frame, text="Iniciar Sesión", corner_radius=10, fg_color="#f4d03f", text_color="black", width=400, height=30, command=iniciar_sesion)
-    boton_login.pack(pady=40)
+    boton_login.pack(pady=10)
 
 
 
