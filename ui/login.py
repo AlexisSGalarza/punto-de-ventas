@@ -2,6 +2,7 @@ import customtkinter as ctk
 from PIL import Image, ImageOps, ImageDraw
 from pathlib import Path
 import os
+import ui.ventana_principal as ve
 
 def ventana_login(ventana):
     
@@ -53,6 +54,18 @@ def ventana_login(ventana):
     # Mensaje de estado
     label_mensaje = ctk.CTkLabel(login_frame, text="", font=("Arial", 14))
     label_mensaje.pack()
+
+    def iniciar_sesion():
+        usuario = entry_usuario.get()
+        contrasena = entry_contrasena.get()
+        if usuario == "admin" and contrasena == "1234":
+            ventana.destroy()  # Cierra la ventana de login
+            ve.mainventana()   # Abre la ventana de ventas
+        else:
+            label_mensaje.configure(text="Usuario o contraseña incorrectos", text_color="red")
+
+    boton_login = ctk.CTkButton(login_frame, text="Iniciar Sesión", corner_radius=10, fg_color="#f4d03f", text_color="black", width=400, height=30, command=iniciar_sesion)
+    boton_login.pack(pady=40)
 
 
 

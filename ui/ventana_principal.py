@@ -1,7 +1,7 @@
 import customtkinter as ctk
 from PIL import Image, ImageOps, ImageDraw
 from tkinter import Scrollbar
-import pagar as pa
+import ui.pagar as pa
 
 
 def redondear_bordes(imagen, radio):
@@ -222,11 +222,14 @@ def mainventana():
     ventana = ctk.CTk()
     ventana.title("Abarrotes Gael")
     ventana.geometry("1920x1080")  # Tamaño de la ventana
-    ventana.configure(fg_color="#fcf3cf") 
+    ventana.configure(fg_color="#fcf3cf")
+    ventana.attributes('-fullscreen', True) 
     
     encabezado(ventana)
     informacion_venta(ventana)
     tabla_encabezados(ventana)
+
+    ventana.mainloop()
 
 
 
