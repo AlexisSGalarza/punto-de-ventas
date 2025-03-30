@@ -1,70 +1,82 @@
 import customtkinter as ctk
-from PIL import Image, ImageOps, ImageDraw
-from pathlib import Path
+from PIL import Image
 import os
 import ui.ventana_principal as ve
 
-def ventana_login(ventana):
-    
-    ventana.title("login-Abarrotes Gael")
 
-    # Crear el cuadro blanco centrado
-    cuadro_blanco = ctk.CTkFrame(ventana, fg_color="white", width=1400, height=700, corner_radius=15)
-    cuadro_blanco.place(relx=0.5, rely=0.5, anchor="center")  # Centrar el cuadro blanco
+class VentanaLogin(ctk.CTkFrame):
+    def __init__(self, master,cambiar_a_principal):
+        super().__init__(master)
+        self.master = master
+        self.cambiar_a_principal = cambiar_a_principal
+        self.configurar_ventana()
+        self.crear_ui()
+        self.configure(fg_color="#fcf3cf")
+
+    def configurar_ventana(self):
+        self.master.title("Login - Abarrotes Gael")
+        self.master.configure()
+        self.pack(fill="both", expand=True)
 
 
-    frame_logo = ctk.CTkFrame(cuadro_blanco, fg_color="white")
-    frame_logo.pack(side="left", padx=20, pady=20, fill="both")
+    def crear_ui(self):
+        # Crear el cuadro blanco centrado
+        cuadro_blanco = ctk.CTkFrame(self, fg_color="white", width=1400, height=700, corner_radius=15)
+        cuadro_blanco.place(relx=0.5, rely=0.5, anchor="center")
 
-    BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-    image_path = os.path.join(BASE_DIR, '..', 'assets', 'logo.jpg')
-    logo_imagen = Image.open(image_path)
+        # Frame izquierdo para el logo
+        frame_logo = ctk.CTkFrame(cuadro_blanco, fg_color="white")
+        frame_logo.pack(side="left", padx=20, pady=20, fill="both")
 
-    # Convertir la imagen para usarla en CTkImage de customtkinter
-    logo_imagen_ctk = ctk.CTkImage(logo_imagen, size=(400, 400)) # Ajustar el tamaño del logo
+        # Cargar y mostrar el logo
+        BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+        image_path = os.path.join(BASE_DIR, '..', 'assets', 'logo.jpg')
+        logo_imagen = Image.open(image_path)
+        logo_imagen_ctk = ctk.CTkImage(logo_imagen, size=(400, 400))
+        label_logo = ctk.CTkLabel(frame_logo, image=logo_imagen_ctk, text="")
+        label_logo.pack(anchor="center", pady=50)
 
-    # Etiqueta para mostrar el logo
-    label_logo = ctk.CTkLabel(frame_logo, image=logo_imagen_ctk, text="")
-    label_logo.pack(anchor="center", pady=50)  # Centrado verticalmente en el frame izquierdo
+        # Frame derecho para el formulario
+        login_frame = ctk.CTkFrame(cuadro_blanco, fg_color="white", width=900, height=700)
+        login_frame.pack(side="right", padx=100, pady=30, fill="both")
 
-    # Frame derecho para el formulario
-    login_frame = ctk.CTkFrame(cuadro_blanco, fg_color="white", width=900, height=700)
-    login_frame.pack(side="right", padx=100, pady=30, fill="both")
+        # Título del formulario
+        label_titulo = ctk.CTkLabel(login_frame, text="Iniciar Sesión", font=("Arial", 30, "bold"), text_color="black")
+        label_titulo.pack(pady=40)
 
-    # Título del formulario
-    label_titulo = ctk.CTkLabel(login_frame, text="Iniciar Sesión", font=("Arial", 30, "bold"),text_color="black")
-    label_titulo.pack(pady=40)
+        # Campo de Usuario
+        label_usuario = ctk.CTkLabel(login_frame, text="Usuario:", font=("Arial", 20), text_color="black")
+        label_usuario.pack(pady=10)
+        self.entry_usuario = ctk.CTkEntry(login_frame, width=400, height=30, fg_color="white", border_color="#f4d03f", text_color="black")
+        self.entry_usuario.pack(pady=10)
 
-    # Campo de Usuario
-    label_usuario = ctk.CTkLabel(login_frame, text="Usuario:", font=("Arial", 20),text_color="black")
-    label_usuario.pack(pady=10)
-    entry_usuario = ctk.CTkEntry(login_frame, width=400, height=30, fg_color="white", border_color="#f4d03f", text_color="black" )
-    entry_usuario.pack(pady=10)
+        # Campo de Contraseña
+        label_contrasena = ctk.CTkLabel(login_frame, text="Contraseña:", font=("Arial", 20), text_color="black")
+        label_contrasena.pack(pady=10)
+        self.entry_contrasena = ctk.CTkEntry(login_frame, width=400, height=30, fg_color="white", text_color="black", border_color="#f4d03f", show="*")
+        self.entry_contrasena.pack(pady=10)
 
-    # Campo de Contraseña
-    label_contrasena = ctk.CTkLabel(login_frame, text="Contraseña:", font=("Arial", 20), text_color="black", )
-    label_contrasena.pack(pady=10)
-    entry_contrasena = ctk.CTkEntry(login_frame, width=400, height=30, fg_color="white", text_color="black" , border_color="#f4d03f", show="*")  # Oculta el texto de la contraseña
-    entry_contrasena.pack(pady=10)
+        # Mensaje de estado
+        self.label_mensaje = ctk.CTkLabel(login_frame, text="", font=("Arial", 14))
+        self.label_mensaje.pack()
 
-    # Mensaje de estado
-    label_mensaje = ctk.CTkLabel(login_frame, text="", font=("Arial", 14))
-    label_mensaje.pack()
+        # Botón de inicio de sesión
+        boton_login = ctk.CTkButton(
+            login_frame,
+            text="Iniciar Sesión",
+            corner_radius=10,
+            fg_color="#f4d03f",
+            text_color="black",
+            width=400,
+            height=30,
+            command=self.iniciar_sesion
+        )
+        boton_login.pack(pady=10)
 
-    def iniciar_sesion():
-        usuario = entry_usuario.get()
-        contrasena = entry_contrasena.get()
+    def iniciar_sesion(self):
+        usuario = self.entry_usuario.get()
+        contrasena = self.entry_contrasena.get()
         if usuario == "admin" and contrasena == "1234":
-            ventana.destroy()  # Cierra la ventana de login
-            ve.mainventana()   # Abre la ventana de ventas
+            self.cambiar_a_principal()
         else:
-            label_mensaje.configure(text="Usuario o contraseña incorrectos", text_color="red")
-
-    boton_login = ctk.CTkButton(login_frame, text="Iniciar Sesión", corner_radius=10, fg_color="#f4d03f", text_color="black", width=400, height=30, command=iniciar_sesion)
-    boton_login.pack(pady=10)
-
-
-
-
-
-
+            self.label_mensaje.configure(text="Usuario o contraseña incorrectos", text_color="red")
