@@ -68,19 +68,34 @@ def crear_producto(ventana):
     entry_nombre.grid(row=2, column=1, padx=10, pady=10, sticky="ew")
     
     # Campo: Precio del producto
-    etiqueta_precio = ctk.CTkLabel(cuadro_blanco, text="Precio:", font=("Arial", 20), text_color="black")
-    etiqueta_precio.grid(row=3, column=0, padx=10, pady=10, sticky="w")
+    etiqueta_Categoría= ctk.CTkLabel(cuadro_blanco, text="Categoría:", font=("Arial", 20), text_color="black")
+    etiqueta_Categoría.grid(row=3, column=0, padx=10, pady=10, sticky="w")
+    entry_Categoría = ctk.CTkEntry(cuadro_blanco, width=600, height=40, font=("Arial", 20), fg_color="white", text_color="black")
+    entry_Categoría.grid(row=3, column=1, padx=10, pady=10, sticky="ew")
+
+    etiqueta_Proveedor = ctk.CTkLabel(cuadro_blanco, text="Proveedor:", font=("Arial", 20), text_color="black")
+    etiqueta_Proveedor.grid(row=4, column=0, padx=10, pady=10, sticky="w")
+    entry_Proveedor = ctk.CTkEntry(cuadro_blanco, width=600, height=40, font=("Arial", 20), fg_color="white", text_color="black")
+    entry_Proveedor.grid(row=4, column=1, padx=10, pady=10, sticky="ew")
+
+    etiqueta_Stock = ctk.CTkLabel(cuadro_blanco, text="Precio unitario :", font=("Arial", 20), text_color="black")
+    etiqueta_Stock.grid(row=5, column=0, padx=10, pady=10, sticky="w")
+    entry_Stock = ctk.CTkEntry(cuadro_blanco, width=600, height=40, font=("Arial", 20), fg_color="white", text_color="black")
+    entry_Stock.grid(row=5, column=1, padx=10, pady=10, sticky="ew")
+
+    etiqueta_precio = ctk.CTkLabel(cuadro_blanco, text="Precio unitario :", font=("Arial", 20), text_color="black")
+    etiqueta_precio.grid(row=6, column=0, padx=10, pady=10, sticky="w")
     entry_precio = ctk.CTkEntry(cuadro_blanco, width=600, height=40, font=("Arial", 20), fg_color="white", text_color="black")
-    entry_precio.grid(row=3, column=1, padx=10, pady=10, sticky="ew")
+    entry_precio.grid(row=6, column=1, padx=10, pady=10, sticky="ew")
     
     # Campo: Descripción (con múltiples líneas)
     etiqueta_descripcion = ctk.CTkLabel(cuadro_blanco, text="Descripción:", font=("Arial", 20), text_color="black")
-    etiqueta_descripcion.grid(row=4, column=0, padx=10, pady=10, sticky="nw")
+    etiqueta_descripcion.grid(row=7, column=0, padx=10, pady=10, sticky="nw")
     text_descripcion = ctk.CTkTextbox(cuadro_blanco, width=600, height=250, font=("Arial", 18), fg_color="white", text_color="black")
-    text_descripcion.grid(row=4, column=1, padx=10, pady=10, sticky="ew")
+    text_descripcion.grid(row=7, column=1, padx=10, pady=10, sticky="ew")
     
     # Configurar la fila 5 para los botones (se expandirá uniformemente)
-    cuadro_blanco.grid_rowconfigure(5, weight=1)
+    cuadro_blanco.grid_rowconfigure(8, weight=1)
     
     # Botón Aceptar
     boton_aceptar = ctk.CTkButton(
@@ -98,7 +113,7 @@ def crear_producto(ventana):
             text_descripcion.get("1.0", "end").strip()
         )
     )
-    boton_aceptar.grid(row=5, column=0, padx=10, pady=20, sticky="ew")
+    boton_aceptar.grid(row=9, column=0, padx=10, pady=20, sticky="ew")
     
     # Botón Cancelar
     boton_cancelar = ctk.CTkButton(
@@ -110,7 +125,7 @@ def crear_producto(ventana):
         height=40,
         command=lambda: print("Operación cancelada")
     )
-    boton_cancelar.grid(row=5, column=1, padx=10, pady=20, sticky="ew")
+    boton_cancelar.grid(row=9, column=1, padx=10, pady=20, sticky="ew")
 
 def crear_cuadro_inferior(ventana):
     """Crea un cuadro que contenga el botón de cerrar sesión y el pie de página en una sola fila."""
