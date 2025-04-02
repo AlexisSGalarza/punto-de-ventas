@@ -68,14 +68,16 @@ class VentanaPrincipal(ctk.CTkFrame):
         info_venta.grid(row=1, column=0, columnspan=3, sticky="nsew", padx=10, pady=10)
 
         info_venta.grid_columnconfigure(0, weight=1)
-        info_venta.grid_columnconfigure(1, weight=1)
+        info_venta.grid_columnconfigure(1, weight=2)  # Mayor peso para el centro
         info_venta.grid_columnconfigure(2, weight=1)
+        info_venta.grid_columnconfigure(1, weight=1)
 
+        # Etiqueta de la fecha
         etiqueta_fecha = ctk.CTkLabel(
-        info_venta,
-        text="Fecha: --/--/----",  # Texto inicial
-        font=("Arial", 20),
-        text_color="black"
+            info_venta,
+            text="Fecha: --/--/----",  # Texto inicial
+            font=("Arial", 20),
+            text_color="black"
         )
         etiqueta_fecha.grid(row=0, column=0, padx=10, pady=5, sticky="w")
 
@@ -88,14 +90,22 @@ class VentanaPrincipal(ctk.CTkFrame):
         )
         etiqueta_hora.grid(row=1, column=0, padx=10, pady=5, sticky="w")
 
-
+        # Etiqueta para el número de venta
         etiqueta_numero_venta = ctk.CTkLabel(
             info_venta,
             text="No. de Venta: 0000000001",
             font=("Arial", 20, "bold"),
             text_color="black"
         )
-        etiqueta_numero_venta.grid(row=0, column=2, rowspan=2, padx=10, pady=5, sticky="e")
+        etiqueta_numero_venta.grid(row=0, column=3, rowspan=2, padx=10, pady=5, sticky="e")
+
+        # Barra de búsqueda en el centro
+        self.search_entry = ctk.CTkEntry(info_venta, placeholder_text="🔍 Buscar producto...", width=300, fg_color="white", text_color="black")
+        self.search_entry.grid(row=0, column=1, padx=10, pady=5, sticky="ew")
+
+        # Botón "Agregar al carrito" en el centro
+        self.agregar_carrito_button = ctk.CTkButton(info_venta, text="Agregar al Carrito", fg_color="white", text_color="black")
+        self.agregar_carrito_button.grid(row=0, column=2, padx=10, pady=5, sticky="ew")
 
     def tabla_encabezados(self):
         # Tabla de encabezados (nueva sección)
