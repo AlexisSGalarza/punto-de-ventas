@@ -1,10 +1,8 @@
 import customtkinter as ctk
 from PIL import Image, ImageDraw
-import agregar_cliente as ac
-import modificar_cliente as mc
-import clientes as db
-
-
+import ui.agregar_cliente as ac
+import ui.modificar_cliente as mc
+import ui.clientes as db
 
 class TiendaApp(ctk.CTk):
     def __init__(self):
@@ -68,7 +66,7 @@ class TiendaApp(ctk.CTk):
 
     def actualizar_tabla(self):
     # Recupera todos los trabajadores desde la base de datos
-        self.filtered_trabajadores = db.obtener_trabajadores() or []
+        self.filtered_clientes = db.obtener_clientes() 
         self.current_page = 1  # Reinicia a la primera página
         self.populate_table()  # Vuelve a llenar la tabla con toda la información
         

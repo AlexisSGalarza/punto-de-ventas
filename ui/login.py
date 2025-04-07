@@ -2,7 +2,9 @@ import customtkinter as ctk
 from PIL import Image
 import os
 import ui.ventana_principal as ve
-
+import ui.conexion as co
+import bcrypt
+from tkinter import messagebox
 
 class VentanaLogin(ctk.CTkFrame):
     def __init__(self, master,cambiar_a_principal):
@@ -73,10 +75,18 @@ class VentanaLogin(ctk.CTkFrame):
         )
         boton_login.pack(pady=10)
 
+
     def iniciar_sesion(self):
         usuario = self.entry_usuario.get()
         contrasena = self.entry_contrasena.get()
-        if usuario == "admin" and contrasena == "1234":
+
+        # Credenciales provisionales
+        usuario_provisional = "admin"
+        contrasena_provisional = "1234"
+
+        if usuario == usuario_provisional and contrasena == contrasena_provisional:
+            # Si las credenciales son correctas, se procede al cambio de ventana
             self.cambiar_a_principal()
         else:
+            # Si las credenciales son incorrectas
             self.label_mensaje.configure(text="Usuario o contraseña incorrectos", text_color="red")
