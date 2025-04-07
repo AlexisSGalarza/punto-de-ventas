@@ -1,9 +1,7 @@
 import customtkinter as ctk
 from PIL import Image, ImageDraw
-import agregar_producto as ap
-import modificar_producto as mp
-import eliminar_producto  as ep
-
+import app.agregar_producto as ap
+import app.modificar_producto as mp
 
 # Datos de productos de la tienda
 productos = [
@@ -147,7 +145,7 @@ class TiendaApp(ctk.CTk):
             btn_edit.pack(side="left", padx=5)
 
             # Botón Eliminar
-            btn_delete = ctk.CTkButton(button_frame, text="🗑 Eliminar", fg_color="#e74c3c", text_color="white", width=50, command=ep.eliminar_producto)
+            btn_delete = ctk.CTkButton(button_frame, text="🗑 Eliminar", fg_color="#e74c3c", text_color="white", width=50, command='')
             btn_delete.pack(side="left", padx=5)
 
         for row in range(len(page_items) + 1):  # Incluye encabezados y filas de contenido

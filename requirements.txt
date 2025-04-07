@@ -10,3 +10,6 @@ os
 pip install customtkinter pandas sqlalchemy mysql-connector-python seaborn reportlab weasyprint
 pip install pandas
 pip install matplotlib
+pip install tkcalendar
+pip install bcrypt
+pip install reportlab

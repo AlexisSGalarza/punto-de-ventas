@@ -2,21 +2,9 @@ import customtkinter as ctk
 from PIL import Image, ImageDraw
 import agregar_cliente as ac
 import modificar_cliente as mc
-import eleminar_cliente as ec
+import clientes as db
 
-# Datos de clientes con sus campos correspondientes
-clientes = [
-    ("CLI001", "Juan", "Pérez", "juan.perez@ejemplo.com", "555-1234", "Calle Ficticia 123, Colonia, Ciudad", "2023-01-15"),
-    ("CLI002", "María", "López", "maria.lopez@ejemplo.com", "555-5678", "Avenida Siempre Viva 456, Colonia, Ciudad", "2022-09-30"),
-    ("CLI003", "Carlos", "González", "carlos.gonzalez@ejemplo.com", "555-8765", "Boulevard del Sol 789, Colonia, Ciudad", "2021-06-10"),
-    ("CLI004", "Ana", "Martínez", "ana.martinez@ejemplo.com", "555-4321", "Callejón del Río 101, Colonia, Ciudad", "2020-03-22"),
-    ("CLI005", "Luis", "Hernández", "luis.hernandez@ejemplo.com", "555-1357", "Calle Libertad 202, Colonia, Ciudad", "2022-11-18"),
-    # Generar dinámicamente clientes con sus IDs únicos
-    *[
-        (f"CLI{str(i).zfill(3)}", f"Nombre {i}", f"Apellido {i}", f"correo{i}@ejemplo.com", f"555-XXXX", f"Calle {i} XYZ, Colonia, Ciudad", f"202{i-5}-01-01")
-        for i in range(6, 21)
-    ]
-]
+
 
 class TiendaApp(ctk.CTk):
     def __init__(self):
@@ -28,7 +16,7 @@ class TiendaApp(ctk.CTk):
 
         self.current_page = 1  # Página actual
         self.items_per_page = 10  # Número de clientes por página
-        self.filtered_clientes = clientes.copy()  # Lista inicial sin filtrar
+        self.filtered_clientes = db.obtener_clientes()  # Lista inicial sin filtrar
 
         # Crear encabezado
         self.crear_encabezado()
@@ -41,7 +29,7 @@ class TiendaApp(ctk.CTk):
         self.search_frame.grid_columnconfigure(1, weight=1)  # Centrar el buscador
         self.search_frame.grid_columnconfigure(2, weight=0)  # Alinear "Buscar" a la derecha
 
-        self.add_cliente_button = ctk.CTkButton(self.search_frame, text="➕ Agregar Cliente", fg_color="#2ecc71", text_color="white", command=ac.crear_cliente)
+        self.add_cliente_button = ctk.CTkButton(self.search_frame, text="➕ Agregar Cliente", fg_color="#2ecc71", text_color="white", command=self.abrir_agregar_clienter)
         self.add_cliente_button.grid(row=0, column=0, padx=5, pady=5, sticky="w")
 
         self.search_entry = ctk.CTkEntry(self.search_frame, placeholder_text="🔍 Buscar cliente...", width=300, fg_color="white", text_color="black")
@@ -78,6 +66,36 @@ class TiendaApp(ctk.CTk):
         # Llenar la tabla
         self.populate_table()
 
+    def actualizar_tabla(self):
+    # Recupera todos los trabajadores desde la base de datos
+        self.filtered_trabajadores = db.obtener_trabajadores() or []
+        self.current_page = 1  # Reinicia a la primera página
+        self.populate_table()  # Vuelve a llenar la tabla con toda la información
+        
+    def abrir_agregar_clienter(self):
+        ac.agregar_cliente(on_close_callback=self.actualizar_tabla)
+
+    def modificar_cliente(self, id_cliente):
+        """Abre el modal de modificación para el trabajador con el ID dado."""
+        try:
+            mc.modificar_cliente(id_cliente, on_close_callback=self.actualizar_tabla)
+        except Exception as e:
+            print(f"Error al abrir el modal de modificación: {e}")
+            
+
+    def eliminar_cliente(self, id_cliente):
+        """Elimina un trabajador y actualiza la tabla."""
+        from tkinter import messagebox
+        if messagebox.askyesno("Confirmar", f"¿Estás seguro de que deseas eliminar al trabajador con ID {id_cliente}?"):
+            try:
+                db.eliminar_cliente(id_cliente)  # Llama a la función que elimina al trabajador
+                messagebox.showinfo("Éxito", f"El trabajador con ID {id_cliente} ha sido eliminado.")
+                self.actualizar_tabla()  # Actualiza la tabla después de eliminar
+            except Exception as e:
+                messagebox.showerror("Error", f"No se pudo eliminar al trabajador: {e}")
+
+
+
     def crear_encabezado(self):
         """Crea el encabezado principal."""
         encabezado = ctk.CTkFrame(self, fg_color="#f4d03f", height=100)
@@ -110,7 +128,7 @@ class TiendaApp(ctk.CTk):
     def buscar_cliente(self):
         """Filtra clientes según la búsqueda."""
         query = self.search_entry.get().lower()
-        self.filtered_clientes = [c for c in clientes if query in c[1].lower() or query in c[2].lower()]
+        self.filtered_clientes = [c for c in db.obtener_clientes()  if query in c[1].lower() or query in c[2].lower()]
         self.current_page = 1
         self.populate_table()
 
@@ -126,6 +144,7 @@ class TiendaApp(ctk.CTk):
             lbl = ctk.CTkLabel(self.frame_table, text=header, font=("Arial", 18, "bold"), fg_color="#f4d03f", text_color="black")
             lbl.grid(row=0, column=col, sticky="nsew", padx=2, pady=2)  # Márgenes compactos
 
+        all_items = self.filtered_clientes # Total de clientes filtrados
         # Configuración de columnas
         for col in range(len(headers)):
             if col == len(headers) - 1:  # Última columna (botones)
@@ -154,12 +173,12 @@ class TiendaApp(ctk.CTk):
             button_frame.grid(row=row, column=len(headers)-1, sticky="w", padx=2, pady=2)
 
             # Botón Editar
-            btn_edit = ctk.CTkButton(button_frame, text="✏ Editar", fg_color="#2471a3", text_color="white", width=50, height=40, command=mc.modificar_cliente)
+            btn_edit = ctk.CTkButton(button_frame, text="✏ Editar", fg_color="#2471a3", text_color="white", width=50, height=40, command=lambda id_cliente=item[0]: self.modificar_cliente(id_cliente))
             btn_edit.pack(side="left", padx=5)  # Separación entre botones
 
             # Botón Eliminar
-            btn_delete = ctk.CTkButton(button_frame, text="🗑 Eliminar", fg_color="#e74c3c", text_color="white", width=50,height=40, command=ec.eliminar_cliente)
-            btn_delete.pack(side="left", padx=5)  # Separación entre botones
+            btn_delete = ctk.CTkButton(button_frame, text="🗑 Eliminar", fg_color="#e74c3c", text_color="white", width=50,height=40, command=lambda id_cliente=item[0]: self.eliminar_cliente(id_cliente))
+            btn_delete.pack(side="left", padx=5)
 
         # Configurar filas para que se expandan proporcionalmente
         for row in range(len(page_items) + 1):  # Incluye encabezados y filas de contenido

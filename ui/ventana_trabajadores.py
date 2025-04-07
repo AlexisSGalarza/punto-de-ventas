@@ -1,40 +1,44 @@
 import customtkinter as ctk
 from PIL import Image, ImageDraw
-import agregar_trabajador as at
-import modificar_trabajador as mt
-import eliminar_trabajaddor as et
+import app.agregar_trabajador as at
+import app.modificar_trabajador as mt
+import app.trabajadores as trabajadores_db
+from ui.dashboard_vista import DashboardVista
+import os
 
-# Datos de trabajadores de la tienda
-trabajadores = [
-    # Datos de trabajadores con un campo adicional de "ID Trabajador"
-    ("TRB001", "Juan", "Pérez", "Vendedor", "1500.00", "2023-01-15", "juan.perez@ejemplo.com", "555-1234"),
-    ("TRB002", "María", "López", "Cajera", "1200.00", "2022-09-30", "maria.lopez@ejemplo.com", "555-5678"),
-    ("TRB003", "Carlos", "González", "Supervisor", "2500.00", "2021-06-10", "carlos.gonzalez@ejemplo.com", "555-8765"),
-    ("TRB004", "Ana", "Martínez", "Jefe de Ventas", "3000.00", "2020-03-22", "ana.martinez@ejemplo.com", "555-4321"),
-    ("TRB005", "Luis", "Hernández", "Almacén", "1300.00", "2022-11-18", "luis.hernandez@ejemplo.com", "555-1357"),
-    # Generar dinámicamente trabajadores con sus IDs únicos
-    *[
-        (f"TRB{str(i).zfill(3)}", f"Nombre {i}", f"Apellido {i}", f"Cargo {i}", f"{1500 + i}.00", f"202{i-5}-01-01", f"correo{i}@ejemplo.com", f"555-XXXX")
-        for i in range(6, 21)
-    ]
-]
-
-class TiendaApp(ctk.CTk):
+class VentanaTrabajadores(ctk.CTk):
     def __init__(self):
         super().__init__()
-
-        self.title("👨‍💼 Gestión de Trabajadores - Empleados")
-        self.geometry("1920x1080")
         self.configure(fg_color="#fcf3cf")
-
+        
         self.current_page = 1  # Página actual
         self.items_per_page = 10  # Número de trabajadores por página
-        self.filtered_trabajadores = trabajadores.copy()  # Lista inicial sin filtrar
+        self.filtered_trabajadores = trabajadores_db.obtener_trabajadores()
+        self.filtered_trabajadores = []
+        self.crear_ui()
 
-        # Crear encabezado
+    def redondear_bordes(self, imagen, radio):
+        """Redondea los bordes de una imagen."""
+        mascara = Image.new("L", imagen.size, 0)
+        draw = ImageDraw.Draw(mascara)
+        draw.rounded_rectangle(
+            (0, 0, imagen.size[0], imagen.size[1]),
+            radius=radio, fill=255
+        )
+        imagen_redondeada = imagen.convert("RGBA")
+        imagen_redondeada.putalpha(mascara)
+        return imagen_redondeada 
+       
+    def crear_ui(self):
+        """Crea toda la interfaz visual de la ventana principal."""
         self.crear_encabezado()
-
-        # Barra superior con buscador y botón "Agregar Trabajador"
+        self.crear_barra_busqueda()
+        self.crear_contenedor_tabla()
+        self.crear_paginacion()
+        self.populate_table()
+    
+    def crear_barra_busqueda(self):
+        """Crea la interfaz de usuario."""
         self.search_frame = ctk.CTkFrame(self, fg_color="#fcf3cf")
         self.search_frame.grid(row=1, column=0, padx=20, pady=10, sticky="ew")
 
@@ -42,7 +46,7 @@ class TiendaApp(ctk.CTk):
         self.search_frame.grid_columnconfigure(1, weight=1)  # Centrar el buscador
         self.search_frame.grid_columnconfigure(2, weight=0)  # Alinear "Buscar" a la derecha
 
-        self.add_trabajador_button = ctk.CTkButton(self.search_frame, text="➕ Agregar Trabajador", fg_color="#2ecc71", text_color="white", command=at.agregartrabajador)
+        self.add_trabajador_button = ctk.CTkButton(self.search_frame, text="➕ Agregar Trabajador", fg_color="#2ecc71", text_color="white", command=self.abrir_agregar_trabajador)
         self.add_trabajador_button.grid(row=0, column=0, padx=5, pady=5, sticky="w")
 
         self.search_entry = ctk.CTkEntry(self.search_frame, placeholder_text="🔍 Buscar trabajador...", width=300, fg_color="white", text_color="black")
@@ -50,14 +54,15 @@ class TiendaApp(ctk.CTk):
 
         self.search_button = ctk.CTkButton(self.search_frame, text="Buscar", command=self.buscar_trabajador, fg_color="white", text_color="black")
         self.search_button.grid(row=0, column=2, padx=5, pady=5)
-
+    
+    def crear_contenedor_tabla(self):
         # Contenedor principal de la tabla
         self.frame_table = ctk.CTkFrame(self, fg_color="white", border_width=2, border_color="white", corner_radius=30)
         self.frame_table.grid(row=2, column=0, padx=20, pady=20, sticky="nsew")
 
         self.grid_rowconfigure(2, weight=1)
         self.grid_columnconfigure(0, weight=1)
-
+    def crear_paginacion(self):
         # Contenedor de paginación (botones "Anterior" y "Siguiente")
         self.pagination_frame = ctk.CTkFrame(self, fg_color="#fcf3cf")
         self.pagination_frame.grid(row=3, column=0, padx=20, pady=10, sticky="ew")
@@ -76,8 +81,34 @@ class TiendaApp(ctk.CTk):
         self.next_button.grid(row=0, column=3, padx=5, sticky="e")
 
 
-        # Llenar la tabla
-        self.populate_table()
+    def actualizar_tabla(self):
+    # Recupera todos los trabajadores desde la base de datos
+        self.filtered_trabajadores = trabajadores_db.obtener_trabajadores() or []
+        self.current_page = 1  # Reinicia a la primera página
+        self.populate_table()  # Vuelve a llenar la tabla con toda la información
+        
+    def abrir_agregar_trabajador(self):
+        at.agregartrabajador(on_close_callback=self.actualizar_tabla)
+
+    def modificar_trabajador(self, id_trabajador):
+        """Abre el modal de modificación para el trabajador con el ID dado."""
+        try:
+            mt.modificartrabajador(id_trabajador, on_close_callback=self.actualizar_tabla)
+        except Exception as e:
+            print(f"Error al abrir el modal de modificación: {e}")
+            
+
+    def eliminar_trabajador(self, id_trabajador):
+        """Elimina un trabajador y actualiza la tabla."""
+        from tkinter import messagebox
+        if messagebox.askyesno("Confirmar", f"¿Estás seguro de que deseas eliminar al trabajador con ID {id_trabajador}?"):
+            try:
+                trabajadores_db.eliminar_trabajador(id_trabajador)  # Llama a la función que elimina al trabajador
+                messagebox.showinfo("Éxito", f"El trabajador con ID {id_trabajador} ha sido eliminado.")
+                self.actualizar_tabla()  # Actualiza la tabla después de eliminar
+            except Exception as e:
+                messagebox.showerror("Error", f"No se pudo eliminar al trabajador: {e}")
+
 
     def crear_encabezado(self):
         """Crea el encabezado principal."""
@@ -91,13 +122,7 @@ class TiendaApp(ctk.CTk):
         encabezado.grid_columnconfigure(1, weight=1)
         encabezado.grid_columnconfigure(2, weight=1)
 
-        # Logo
-        logo_imagen = Image.open("assets/logo.jpg")
-        logo_imagen_redondeada = self.redondear_bordes(logo_imagen, radio=75)
-        logo_imagen_ctk = ctk.CTkImage(logo_imagen_redondeada, size=(100, 100))
 
-        logo = ctk.CTkLabel(encabezado, image=logo_imagen_ctk, text="")
-        logo.grid(row=0, column=0, padx=10, pady=10, sticky="w")
 
         # Texto del encabezado
         texto_encabezado = ctk.CTkLabel(
@@ -111,7 +136,7 @@ class TiendaApp(ctk.CTk):
     def buscar_trabajador(self):
         """Filtra trabajadores según la búsqueda."""
         query = self.search_entry.get().lower()
-        self.filtered_trabajadores = [t for t in trabajadores if query in t[1].lower() or query in t[2].lower()]
+        self.filtered_trabajadores = [t for t in trabajadores_db.obtener_trabajadores() if query in t[1].lower() or query in t[2].lower()   ]
         self.current_page = 1
         self.populate_table()
 
@@ -126,6 +151,8 @@ class TiendaApp(ctk.CTk):
         for col, header in enumerate(headers):
             lbl = ctk.CTkLabel(self.frame_table, text=header, font=("Arial", 18, "bold"), fg_color="#f4d03f", text_color="black")
             lbl.grid(row=0, column=col, sticky="nsew", padx=2, pady=2)  # Márgenes compactos
+        
+        all_items = self.filtered_trabajadores  # Obtener trabajadores de la base de datos
 
         # Configuración de columnas
         for col in range(len(headers)):
@@ -155,12 +182,12 @@ class TiendaApp(ctk.CTk):
             button_frame.grid(row=row, column=len(headers)-1, sticky="w", padx=2, pady=2)
 
             # Botón Editar
-            btn_edit = ctk.CTkButton(button_frame, text="✏ Editar", fg_color="#2471a3", text_color="white", width=50, height=40, command=mt.modificartrabajador)
-            btn_edit.pack(side="left", padx=5)  # Separación entre botones
+            btn_edit = ctk.CTkButton(button_frame, text="✏ Editar", fg_color="#2471a3", text_color="white", width=50, height=40, command=lambda id_trabajador=item[0]: self.modificar_trabajador(id_trabajador))
+            btn_edit.grid(row=0, column=0, padx=5)  # Separación entre botones
 
             # Botón Eliminar
-            btn_delete = ctk.CTkButton(button_frame, text="🗑 Eliminar", fg_color="#e74c3c", text_color="white", width=50, height=40, command=et.eliminar_trabajador)
-            btn_delete.pack(side="left", padx=5)  # Separación entre botones
+            btn_delete = ctk.CTkButton(button_frame, text="🗑 Eliminar", fg_color="#e74c3c", text_color="white", width=50, height=40, command=lambda id_trabajador=item[0]: self.eliminar_trabajador(id_trabajador))
+            btn_delete.grid(row=0, column=1, padx=5)  # Separación entre botones
 
         # Configurar filas para que se expandan proporcionalmente
         for row in range(len(page_items) + 1):  # Incluye encabezados y filas de contenido
@@ -177,24 +204,12 @@ class TiendaApp(ctk.CTk):
         if self.current_page < (len(self.filtered_trabajadores) - 1) // self.items_per_page + 1:
             self.current_page += 1
             self.populate_table()
+
             
     def regresar_dashboard(self):
-        """Regresa al Dashboard principal."""
-        print("Regresando al Dashboard...")
+        """Regresa al Dashboard.""" # Importación diferida
+        ventana_dashboard = DashboardVista(self)
+        
+        self.destroy()  # Cierra la ventana actual
+        ventana_dashboard.mainloop()
 
-
-    def redondear_bordes(self, imagen, radio):
-        """Redondea los bordes de una imagen."""
-        mascara = Image.new("L", imagen.size, 0)
-        draw = ImageDraw.Draw(mascara)
-        draw.rounded_rectangle(
-            (0, 0, imagen.size[0], imagen.size[1]),
-            radius=radio, fill=255
-        )
-        imagen_redondeada = imagen.convert("RGBA")
-        imagen_redondeada.putalpha(mascara)
-        return imagen_redondeada
-
-if __name__ == "__main__":
-    app = TiendaApp()
-    app.mainloop()

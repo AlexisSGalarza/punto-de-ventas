@@ -2,15 +2,18 @@ import customtkinter as ctk
 from PIL import Image, ImageDraw
 
 
-class DashboardVista(ctk.CTkFrame):
-    def __init__(self, master):
+class DashboardVista(ctk.CTkFrame): 
+    def __init__(self, master,cambiar_a_trabajadores):
         super().__init__(master)
         self.master = master
+        self.cambiar_a_trabajadores = cambiar_a_trabajadores
+        # Further initialization
         self.configure(fg_color="#fcf3cf")
         self.configurar_dashboard()
         self.encabezado()
         self.crear_cuadro_botones()
         self.crear_cuadro_inferior()
+        
 
     def configurar_dashboard(self):
         """Configura las propiedades del Dashboard."""
@@ -107,6 +110,7 @@ class DashboardVista(ctk.CTkFrame):
             fg_color="#85c1e9",
             text_color="black",
             font=("Arial", 30, "bold"),
+            command=self.cambiar_a_trabajadores,
         )
         boton_trabajadores.grid(row=1, column=1, padx=40, pady=30, sticky="nsew")
 
