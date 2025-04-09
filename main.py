@@ -1,29 +1,58 @@
-from ui.gestor_transiciones import GestorTransiciones
+import customtkinter as ctk
 from ui.login import VentanaLogin
 from ui.ventana_principal import VentanaPrincipal
 from ui.dashboard_vista import DashboardVista
 from ui.ventana_trabajadores import VentanaTrabajadores
+from ui.ventan_clientes import VentanaClientes
+from globales import AppState
 
 def main():
-    app = GestorTransiciones()
+    ventana_actual = None  # Variable para rastrear la ventana activa
+    app_state = AppState()
 
-    def cambiar_a_trabajadores():
-       ventana_trabajadores = VentanaTrabajadores()
-       app.cambiar_con_transicion(ventana_trabajadores)
-       print("Navegando a trabajadores...")
-       
-    def cambiar_a_dashboard():
-        ventana_dashboard = DashboardVista(app, cambiar_a_trabajadores)
-        app.cambiar_con_transicion(ventana_dashboard)
+    def abrir_dashboard():
+        nonlocal ventana_actual
+        if ventana_actual:  # Cierra la ventana actual si existe
+            ventana_actual.destroy()
+                    
+        ventana_dashboard = DashboardVista(abrir_clientes, abrir_trabajadores, abrir_login,app_state)  # Agrega abrir_login
+        ventana_actual = ventana_dashboard  # Actualiza la ventana actual
+        ventana_dashboard.mainloop()
 
-    def cambiar_a_principal():
-        ventana_principal = VentanaPrincipal(app, cambiar_a_dashboard)
-        app.cambiar_con_transicion(ventana_principal)
+    def abrir_clientes():
+        nonlocal ventana_actual
+        if ventana_actual:
+            ventana_actual.destroy()
+        ventana_clientes = VentanaClientes(abrir_dashboard)
+        ventana_actual = ventana_clientes
+        ventana_clientes.mainloop()
 
-    ventana_login = VentanaLogin(app, cambiar_a_principal)
-    app.mostrar_ventana(ventana_login)
-    app.mainloop()
+    def abrir_trabajadores():
+        nonlocal ventana_actual
+        if ventana_actual:
+            ventana_actual.destroy()
+        ventana_trabajadores = VentanaTrabajadores(abrir_dashboard)  # Pasar la función abrir_dashboard
+        ventana_actual = ventana_trabajadores
+        ventana_trabajadores.mainloop()
 
+
+    def abrir_principal():
+        nonlocal ventana_actual
+        if ventana_actual:
+            ventana_actual.destroy()
+        ventana_principal = VentanaPrincipal(abrir_dashboard)
+        ventana_actual = ventana_principal
+        ventana_principal.mainloop()
+
+    def abrir_login():
+        nonlocal ventana_actual
+        if ventana_actual:
+            ventana_actual.destroy()
+        ventana_login = VentanaLogin(abrir_principal,app_state)
+        ventana_actual = ventana_login
+        ventana_login.mainloop()
+
+    abrir_login()
 
 if __name__ == "__main__":
-    main()
+    main()  

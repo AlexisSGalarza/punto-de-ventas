@@ -1,16 +1,18 @@
 import customtkinter as ctk
 from PIL import Image, ImageDraw
-import ui.agregar_cliente as ac
-import ui.modificar_cliente as mc
-import ui.clientes as db
+import app.agregar_cliente as ac
+import app.modificar_cliente as mc
+import app.clientes as db
+import os
 
-class TiendaApp(ctk.CTk):
-    def __init__(self):
+class VentanaClientes(ctk.CTk):
+    def __init__(self,cambiar_a_dashboard):
         super().__init__()
-
-        self.title("👨‍💼 Gestión de Clientes")
-        self.geometry("1920x1080")
         self.configure(fg_color="#fcf3cf")
+        self.title("Clientes")
+        self.geometry("1920x1080")
+        self.attributes("-fullscreen", True)
+        self.cambiar_a_dashboard = cambiar_a_dashboard
 
         self.current_page = 1  # Página actual
         self.items_per_page = 10  # Número de clientes por página
@@ -51,7 +53,7 @@ class TiendaApp(ctk.CTk):
         self.pagination_frame.grid_columnconfigure(1, weight=1)  # Botón "Regresar al Dashboard"
         self.pagination_frame.grid_columnconfigure(2, weight=1)  # Botón "Siguiente"
 
-        self.back_button = ctk.CTkButton(self.pagination_frame, text="🏠 Regresar al Dashboard", command=self.regresar_dashboard, fg_color="#2ecc71", text_color="white")
+        self.back_button = ctk.CTkButton(self.pagination_frame, text="🏠 Regresar al Dashboard", command=self.cambiar_a_dashboard, fg_color="#2ecc71", text_color="white")
         self.back_button.grid(row=0, column=0, padx=5, sticky="w")
 
         self.prev_button = ctk.CTkButton(self.pagination_frame, text="⬅ Anterior", command=self.previous_page, fg_color="white", text_color="black")
@@ -106,12 +108,23 @@ class TiendaApp(ctk.CTk):
         encabezado.grid_columnconfigure(1, weight=1)
         encabezado.grid_columnconfigure(2, weight=1)
 
-        # Logo
-        logo_imagen = Image.open("assets/logo.jpg")
-        logo_imagen_redondeada = self.redondear_bordes(logo_imagen, radio=75)
-        logo_imagen_ctk = ctk.CTkImage(logo_imagen_redondeada, size=(100, 100))
+        # Cargar y mostrar el logo
 
-        logo = ctk.CTkLabel(encabezado, image=logo_imagen_ctk, text="")
+        # Logo
+        BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+        image_path = os.path.join(BASE_DIR, '..', 'assets', 'logo.jpg')
+
+        if not os.path.exists(image_path):
+            raise FileNotFoundError(f"El archivo no existe: {image_path}")
+        else:
+            print(f"Imagen encontrada en la ruta: {image_path}")
+        logo_imagen = Image.open(image_path)
+        logo_imagen_redondeada = self.redondear_bordes(logo_imagen, radio=75)
+       # Guardar la referencia como atributo
+        self.logo_imagen_ctk = ctk.CTkImage(logo_imagen_redondeada, size=(100, 100))
+
+        # Usar la imagen en el CTkLabel
+        logo = ctk.CTkLabel(encabezado, image=self.logo_imagen_ctk, text="")
         logo.grid(row=0, column=0, padx=10, pady=10, sticky="w")
 
         # Texto del encabezado
@@ -193,9 +206,7 @@ class TiendaApp(ctk.CTk):
         if self.current_page < (len(self.filtered_clientes) - 1) // self.items_per_page + 1:
             self.current_page += 1
             self.populate_table()
-    def regresar_dashboard(self):
-        """Regresa al Dashboard principal."""
-        print("Regresando al Dashboard...")
+
 
     def redondear_bordes(self, imagen, radio):
         """Redondea los bordes de una imagen."""
@@ -209,6 +220,4 @@ class TiendaApp(ctk.CTk):
         imagen_redondeada.putalpha(mascara)
         return imagen_redondeada
 
-if __name__ == "__main__":
-    app = TiendaApp()
-    app.mainloop()
+

@@ -1,7 +1,7 @@
 import customtkinter as ctk
 import bcrypt
 from tkinter import messagebox
-import ui.clientes as db
+import app.clientes as db
 
 def modificar_cliente(id_cliente, on_close_callback=None):
     """Abre un modal para modificar los datos de un cliente."""

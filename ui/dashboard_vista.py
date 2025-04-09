@@ -1,19 +1,21 @@
 import customtkinter as ctk
 from PIL import Image, ImageDraw
 
-
-class DashboardVista(ctk.CTkFrame): 
-    def __init__(self, master,cambiar_a_trabajadores):
-        super().__init__(master)
-        self.master = master
-        self.cambiar_a_trabajadores = cambiar_a_trabajadores
-        # Further initialization
+class DashboardVista(ctk.CTk):
+    def __init__(self, cambiar_a_clientes, cambiar_a_trabajadores,cambiar_a_login, app_state):
+        super().__init__()
+        self.title("Dashboard - Abarrotes Gael")
+        self.geometry("1920x1080")
         self.configure(fg_color="#fcf3cf")
-        self.configurar_dashboard()
+        self.attributes("-fullscreen", True)
+        self.cambiar_a_clientes = cambiar_a_clientes
+        self.cambiar_a_trabajadores = cambiar_a_trabajadores
+        self.cambiar_a_login = cambiar_a_login
+        self.app_state = app_state
+
         self.encabezado()
         self.crear_cuadro_botones()
         self.crear_cuadro_inferior()
-        
 
     def configurar_dashboard(self):
         """Configura las propiedades del Dashboard."""
@@ -98,6 +100,7 @@ class DashboardVista(ctk.CTkFrame):
             fg_color="#85c1e9",
             text_color="black",
             font=("Arial", 30, "bold"),
+            command=self.cambiar_a_clientes,
         )
         boton_clientes.grid(row=1, column=0, padx=40, pady=30, sticky="nsew")
 
@@ -131,13 +134,12 @@ class DashboardVista(ctk.CTkFrame):
         cuadro_inferior = ctk.CTkFrame(self, fg_color="#fcf3cf", height=150, width=800)
         cuadro_inferior.grid(row=3, column=0, columnspan=3, padx=10, pady=10, sticky="ew")
 
-        def cerrar_sesion():
-            print("Has cerrado sesión.")
+
 
         boton = ctk.CTkButton(
             cuadro_inferior,
             text="Cerrar sesión",
-            command=cerrar_sesion,
+            command=self.cambiar_a_login,
             fg_color="gray",
             height=50,
             text_color="black",

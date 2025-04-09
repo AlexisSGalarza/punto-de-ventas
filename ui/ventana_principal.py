@@ -1,29 +1,21 @@
 import customtkinter as ctk
-from PIL import Image, ImageOps, ImageDraw
+from PIL import Image, ImageDraw
 from tkinter import Scrollbar
 import ui.pagar as pa
+import os
 
 
-class VentanaPrincipal(ctk.CTkFrame):
-    def __init__(self, master, cambiar_a_dashboard):
-        super().__init__(master)
-        self.master = master
-        self.cambiar_a_dashboard = cambiar_a_dashboard
+class VentanaPrincipal(ctk.CTk):
+    def __init__(self, cambiar_a_dashboard):
+        super().__init__()
+        self.title("Abarrotes Gael")
+        self.geometry("1920x1080")
         self.configure(fg_color="#fcf3cf")
+        self.attributes("-fullscreen", True)
+
+        self.cambiar_a_dashboard = cambiar_a_dashboard
           # Fondo claro para mantener el diseño
         self.crear_ui()
-
-    def redondear_bordes(self, imagen, radio):
-        """Redondea los bordes de una imagen."""
-        mascara = Image.new("L", imagen.size, 0)
-        draw = ImageDraw.Draw(mascara)
-        draw.rounded_rectangle(
-            (0, 0, imagen.size[0], imagen.size[1]),
-            radius=radio, fill=255
-        )
-        imagen_redondeada = imagen.convert("RGBA")
-        imagen_redondeada.putalpha(mascara)
-        return imagen_redondeada
 
 
     def crear_ui(self):
@@ -44,12 +36,22 @@ class VentanaPrincipal(ctk.CTkFrame):
        self.grid_columnconfigure(0, weight=1)
        self.grid_columnconfigure(1, weight=1)
        self.grid_columnconfigure(2, weight=1)
+       
+       # Logo
+       BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+       image_path = os.path.join(BASE_DIR, '..', 'assets', 'logo.jpg')
 
-       logo_imagen = Image.open("assets/logo.jpg")
+       if not os.path.exists(image_path):
+            raise FileNotFoundError(f"El archivo no existe: {image_path}")
+       else:
+            print(f"Imagen encontrada en la ruta: {image_path}")
+       logo_imagen = Image.open(image_path)
        logo_imagen_redondeada = self.redondear_bordes(logo_imagen, radio=75)
-       logo_imagen_ctk = ctk.CTkImage(logo_imagen_redondeada, size=(100, 100))
+       # Guardar la referencia como atributo
+       self.logo_imagen_ctk = ctk.CTkImage(logo_imagen_redondeada, size=(100, 100))
 
-       logo = ctk.CTkLabel(encabezado, image=logo_imagen_ctk, text="")
+        # Usar la imagen en el CTkLabel
+       logo = ctk.CTkLabel(encabezado, image=self.logo_imagen_ctk, text="")
        logo.grid(row=0, column=0, padx=10, pady=10, sticky="w")
 
        texto_encabezado = ctk.CTkLabel(
@@ -244,7 +246,17 @@ class VentanaPrincipal(ctk.CTkFrame):
             text_color="black"
         )
         etiqueta_suma.grid(row=1, column=4, sticky="w")
-
+    def redondear_bordes(self, imagen, radio):
+        """Redondea los bordes de una imagen."""
+        mascara = Image.new("L", imagen.size, 0)
+        draw = ImageDraw.Draw(mascara)
+        draw.rounded_rectangle(
+            (0, 0, imagen.size[0], imagen.size[1]),
+            radius=radio, fill=255
+        )
+        imagen_redondeada = imagen.convert("RGBA")
+        imagen_redondeada.putalpha(mascara)
+        return imagen_redondeada
 
 
 

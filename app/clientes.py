@@ -1,4 +1,4 @@
-import ui.conexion as co
+import db.conexion as co
 import mysql.connector 
 
 def obtener_clientes():

@@ -1,25 +1,19 @@
 import customtkinter as ctk
 from PIL import Image
 import os
-import ui.ventana_principal as ve
-import ui.conexion as co
-import bcrypt
 from tkinter import messagebox
 
-class VentanaLogin(ctk.CTkFrame):
-    def __init__(self, master,cambiar_a_principal):
-        super().__init__(master)
-        self.master = master
-        self.cambiar_a_principal = cambiar_a_principal
-        self.configurar_ventana()
-        self.crear_ui()
+class VentanaLogin(ctk.CTk):
+    def __init__(self, cambiar_a_principal,app_state):
+        super().__init__()
+        self.title("Login - Abarrotes Gael")
+        self.geometry("1920x1080")
         self.configure(fg_color="#fcf3cf")
-
-    def configurar_ventana(self):
-        self.master.title("Login - Abarrotes Gael")
-        self.master.configure()
-        self.pack(fill="both", expand=True)
-
+        self.attributes("-fullscreen", True)
+        self.cambiar_a_principal = cambiar_a_principal
+        self.app_state = app_state
+        # Crear UI
+        self.crear_ui()
 
     def crear_ui(self):
         # Crear el cuadro blanco centrado
@@ -75,7 +69,6 @@ class VentanaLogin(ctk.CTkFrame):
         )
         boton_login.pack(pady=10)
 
-
     def iniciar_sesion(self):
         usuario = self.entry_usuario.get()
         contrasena = self.entry_contrasena.get()
@@ -83,6 +76,9 @@ class VentanaLogin(ctk.CTkFrame):
         # Credenciales provisionales
         usuario_provisional = "admin"
         contrasena_provisional = "1234"
+        
+        self.app_state.usuario_actual = "Juan Pérez"
+        self.app_state.rol_actual = "2"
 
         if usuario == usuario_provisional and contrasena == contrasena_provisional:
             # Si las credenciales son correctas, se procede al cambio de ventana
