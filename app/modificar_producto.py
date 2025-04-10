@@ -1,84 +1,121 @@
 import customtkinter as ctk
+from tkinter import messagebox
+import app.Productos as db  # Asegúrate de que las funciones necesarias estén definidas en tu módulo de base de datos
 
-def modificar_producto():
+def modificar_producto(id_producto, on_close_callback=None):
+    """Abre un modal para modificar los datos de un producto."""
     # Crear ventana principal
     root = ctk.CTk()
-    root.resizable(False, False)  # Desactivar redimensionamiento
-    root.protocol("WM_DELETE_WINDOW", lambda: None)
+    root.title("Modificar Producto")
+    root.resizable(False, False)
+    root.protocol("WM_DELETE_WINDOW", lambda: cancelar_producto())
 
-    # Cuadro blanco para los widgets
-    cuadro_blanco = ctk.CTkFrame(root, fg_color="#fcf3cf")  # Color de fondo
+    # Cuadro blanco principal
+    cuadro_blanco = ctk.CTkFrame(root, fg_color="#fcf3cf")
     cuadro_blanco.grid(row=0, column=0, padx=20, pady=20)
 
-    # Titulo del formulario
+    # Título del formulario
     titulo = ctk.CTkLabel(cuadro_blanco, text="Modificar Producto", font=("Arial", 32, "bold"), text_color="black")
     titulo.grid(row=0, column=0, columnspan=2, padx=20, pady=(20, 10), sticky="n")
 
-    # Configurar las columnas del cuadro blanco para distribuir los widgets
+    # Configurar columnas del cuadro blanco
     cuadro_blanco.grid_columnconfigure(0, weight=1)
     cuadro_blanco.grid_columnconfigure(1, weight=2)
 
-    # Campo: Nombre Producto
-    etiqueta_nombre = ctk.CTkLabel(cuadro_blanco, text="Nombre Producto:", font=("Arial", 20), text_color="black")
-    etiqueta_nombre.grid(row=1, column=0, padx=10, pady=10, sticky="w")
-    entry_nombre_producto = ctk.CTkEntry(cuadro_blanco, width=600, height=40, font=("Arial", 20), fg_color="white", text_color="black",border_color="#f4d03f")
-    entry_nombre_producto.grid(row=1, column=1, padx=10, pady=10, sticky="ew")
+    # Función para crear entradas estilizadas
+    def crear_entry(parent, placeholder):
+        return ctk.CTkEntry(
+            parent,
+            placeholder_text=placeholder,
+            width=600,
+            height=40,
+            fg_color="white",
+            text_color="black",
+            border_color="#f4d03f",
+            font=("Arial", 20)
+        )
 
-    # Campo: Descripción
-    etiqueta_descripcion = ctk.CTkLabel(cuadro_blanco, text="Descripción:", font=("Arial", 20), text_color="black")
-    etiqueta_descripcion.grid(row=2, column=0, padx=10, pady=10, sticky="w")
-    entry_descripcion = ctk.CTkEntry(cuadro_blanco, width=600, height=40, font=("Arial", 20), fg_color="white", text_color="black",border_color="#f4d03f")
+    # Campos del formulario
+    entry_nombre = crear_entry(cuadro_blanco, "Nombre del Producto")
+    entry_nombre.grid(row=1, column=1, padx=10, pady=10, sticky="ew")
+
+    entry_descripcion = crear_entry(cuadro_blanco, "Descripción")
     entry_descripcion.grid(row=2, column=1, padx=10, pady=10, sticky="ew")
 
-    # Campo: Precio
-    etiqueta_precio = ctk.CTkLabel(cuadro_blanco, text="Precio:", font=("Arial", 20), text_color="black")
-    etiqueta_precio.grid(row=3, column=0, padx=10, pady=10, sticky="w")
-    entry_precio = ctk.CTkEntry(cuadro_blanco, width=600, height=40, font=("Arial", 20), fg_color="white", text_color="black",border_color="#f4d03f")
+    entry_precio = crear_entry(cuadro_blanco, "Precio ($)")
     entry_precio.grid(row=3, column=1, padx=10, pady=10, sticky="ew")
 
-    # Campo: Stock
-    etiqueta_stock = ctk.CTkLabel(cuadro_blanco, text="Stock:", font=("Arial", 20), text_color="black")
-    etiqueta_stock.grid(row=4, column=0, padx=10, pady=10, sticky="w")
-    entry_stock = ctk.CTkEntry(cuadro_blanco, width=600, height=40, font=("Arial", 20), fg_color="white", text_color="black",border_color="#f4d03f")
+    entry_stock = crear_entry(cuadro_blanco, "Stock")
     entry_stock.grid(row=4, column=1, padx=10, pady=10, sticky="ew")
 
-    # Campo: Categoría
-    etiqueta_categoria = ctk.CTkLabel(cuadro_blanco, text="Categoría:", font=("Arial", 20), text_color="black")
-    etiqueta_categoria.grid(row=5, column=0, padx=10, pady=10, sticky="w")
-    entry_categoria = ctk.CTkEntry(cuadro_blanco, width=600, height=40, font=("Arial", 20), fg_color="white", text_color="black",border_color="#f4d03f")
+    entry_categoria = crear_entry(cuadro_blanco, "Categoría")
     entry_categoria.grid(row=5, column=1, padx=10, pady=10, sticky="ew")
 
-    # Campo: Proveedor
-    etiqueta_proveedor = ctk.CTkLabel(cuadro_blanco, text="Proveedor:", font=("Arial", 20), text_color="black")
-    etiqueta_proveedor.grid(row=6, column=0, padx=10, pady=10, sticky="w")
-    entry_proveedor = ctk.CTkEntry(cuadro_blanco, width=600, height=40, font=("Arial", 20), fg_color="white", text_color="black",border_color="#f4d03f")
+    entry_proveedor = crear_entry(cuadro_blanco, "Proveedor")
     entry_proveedor.grid(row=6, column=1, padx=10, pady=10, sticky="ew")
 
-    def modificar_producto():
-        nombre_producto = entry_nombre_producto.get()
-        descripcion = entry_descripcion.get()
-        precio = entry_precio.get()
-        stock = entry_stock.get()
-        categoria = entry_categoria.get()
-        proveedor = entry_proveedor.get()
-        
-        # Lógica para modificar producto en la base de datos
-        print(f"Producto modificado: {nombre_producto}, Precio: {precio}, Stock: {stock}")
-    def cancelar_cliente():
-        root.destroy()  # Cierra la ventana principal
+    entry_codigo_barras = crear_entry(cuadro_blanco, "Código de Barras")
+    entry_codigo_barras.grid(row=7, column=1, padx=10, pady=10, sticky="ew")
 
-    # Frame para los botones centrados
+    entry_codigo_producto = crear_entry(cuadro_blanco, "Código de Producto")
+    entry_codigo_producto.grid(row=8, column=1, padx=10, pady=10, sticky="ew")
+
+    # Función para cargar los datos del producto
+    def cargar_producto(producto):
+        """Carga los datos de un producto en los campos del formulario."""
+        entry_nombre.insert(0, producto["Nombre_pr"])
+        entry_descripcion.insert(0, producto["Descripcion_pr"])
+        entry_precio.insert(0, str(producto["Precio_pr"]))
+        entry_stock.insert(0, str(producto["Stock_pr"]))
+        entry_categoria.insert(0, producto["Categoria_pr"])
+        entry_proveedor.insert(0, producto["Proveedor_pr"])
+        entry_codigo_barras.insert(0, producto["codigo_barras_pr"])
+        entry_codigo_producto.insert(0, producto["codigo_producto_pr"])
+
+    # Recuperar datos del producto de la base de datos
+    producto = db.obtener_producto_por_id(id_producto)  # Implementa esta función en tu módulo de base de datos
+    if producto:
+        cargar_producto(producto)
+    else:
+        messagebox.showerror("Error", "No se encontró el producto.")
+        root.destroy()
+
+    # Función para guardar las modificaciones
+    def guardar_modificaciones():
+        try:
+            producto_modificado = {
+                "nombre": entry_nombre.get(),
+                "descripcion": entry_descripcion.get(),
+                "precio": float(entry_precio.get()),
+                "stock": int(entry_stock.get()),
+                "categoria": entry_categoria.get(),
+                "proveedor": entry_proveedor.get(),
+                "codigo_barras": entry_codigo_barras.get(),
+                "codigo_producto": entry_codigo_producto.get()
+            }
+            db.modificar_producto(id_producto, producto_modificado)  # Implementa esta función
+            messagebox.showinfo("Éxito", "Producto modificado exitosamente.")
+            if on_close_callback:
+                on_close_callback()  # Llama al callback tras guardar
+            root.destroy()
+        except Exception as e:
+            messagebox.showerror("Error", f"No se pudieron guardar los cambios: {e}")
+
+    # Función para cancelar las modificaciones
+    def cancelar_producto():
+        if on_close_callback:
+            on_close_callback()  # Llama al callback al cancelar
+        root.destroy()
+
+    # Botones para guardar o cancelar
     frame_botones = ctk.CTkFrame(cuadro_blanco, fg_color="#fcf3cf")
-    frame_botones.grid(row=7, column=0, columnspan=2,padx=20, pady=10, sticky="ew")
+    frame_botones.grid(row=9, column=0, columnspan=2, padx=20, pady=10, sticky="ew")
 
-    frame_botones.grid_columnconfigure(0, weight=1)
-    frame_botones.grid_columnconfigure(1, weight=1)
+    boton_guardar = ctk.CTkButton(frame_botones, text="Guardar", fg_color="green", command=guardar_modificaciones)
+    boton_guardar.grid(row=0, column=1, padx=5, pady=5)
 
-    boton_cancelar = ctk.CTkButton(frame_botones, text="Cancelar", font=("Arial", 20), fg_color="red", text_color="white", command=cancelar_cliente)
-    boton_cancelar.grid(row=0, column=0, padx=5, sticky="e")
+    boton_cancelar = ctk.CTkButton(frame_botones, text="Cancelar", fg_color="red", command=cancelar_producto)
+    boton_cancelar.grid(row=0, column=0, padx=5, pady=5)
 
-    boton_guardar = ctk.CTkButton(frame_botones, text="Guardar", font=("Arial", 20), fg_color="green", text_color="white", command=modificar_producto)
-    boton_guardar.grid(row=0, column=1, padx=5, sticky="e")
-
+    # Ejecutar el modal
     root.mainloop()
-

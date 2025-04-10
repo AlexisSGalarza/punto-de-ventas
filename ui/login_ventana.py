@@ -2,6 +2,7 @@ import customtkinter as ctk
 from PIL import Image
 import os
 from tkinter import messagebox
+from app.login import autentacacion_login
 
 class VentanaLogin(ctk.CTk):
     def __init__(self, cambiar_a_principal,app_state):
@@ -70,19 +71,24 @@ class VentanaLogin(ctk.CTk):
         boton_login.pack(pady=10)
 
     def iniciar_sesion(self):
-        usuario = self.entry_usuario.get()
-        contrasena = self.entry_contrasena.get()
+            usuario = self.entry_usuario.get().strip()
+            contrasena = self.entry_contrasena.get().strip()
 
-        # Credenciales provisionales
-        usuario_provisional = "admin"
-        contrasena_provisional = "1234"
-        
-        self.app_state.usuario_actual = "Juan Pérez"
-        self.app_state.rol_actual = "2"
+            if not usuario or not contrasena:
+                self.label_mensaje.configure(text="Los campos no pueden estar vacíos", text_color="orange")
+                return
 
-        if usuario == usuario_provisional and contrasena == contrasena_provisional:
-            # Si las credenciales son correctas, se procede al cambio de ventana
-            self.cambiar_a_principal()
-        else:
-            # Si las credenciales son incorrectas
-            self.label_mensaje.configure(text="Usuario o contraseña incorrectos", text_color="red")
+            try:
+                resultado = autentacacion_login(usuario, contrasena)
+            except Exception as e:
+                self.label_mensaje.configure(text=f"Error: {str(e)}", text_color="red")
+                return
+
+            if resultado:
+                self.app_state.usuario_actual = resultado["Nombre_tr"]
+                self.app_state.rol_actual = resultado["Rol_tr"]
+                self.app_state.sesion_iniciada = True
+                self.cambiar_a_principal()
+            else:
+                self.label_mensaje.configure(text="Usuario o contraseña incorrectos", text_color="red")
+

@@ -1,8 +1,9 @@
 import customtkinter as ctk
 from PIL import Image, ImageDraw
+from tkinter import messagebox
 
 class DashboardVista(ctk.CTk):
-    def __init__(self, cambiar_a_clientes, cambiar_a_trabajadores,cambiar_a_login, app_state):
+    def __init__(self, cambiar_a_clientes, cambiar_a_trabajadores,cambiar_a_login, app_state, cambiar_a_productos):
         super().__init__()
         self.title("Dashboard - Abarrotes Gael")
         self.geometry("1920x1080")
@@ -11,7 +12,13 @@ class DashboardVista(ctk.CTk):
         self.cambiar_a_clientes = cambiar_a_clientes
         self.cambiar_a_trabajadores = cambiar_a_trabajadores
         self.cambiar_a_login = cambiar_a_login
+        self.cambiar_a_productos = cambiar_a_productos
         self.app_state = app_state
+
+        if not self.app_state.sesion_iniciada:
+            messagebox.showerror("Acceso denegado", "Debe iniciar sesión para acceder al dashboard.")
+            self.cambiar_a_login()
+            return
 
         self.encabezado()
         self.crear_cuadro_botones()
@@ -60,6 +67,13 @@ class DashboardVista(ctk.CTk):
         encabezado.grid_columnconfigure(1, weight=1)
 
     def crear_cuadro_botones(self):
+        """Evalúa el rol del usuario y ejecuta la subfunción correspondiente para el diseño."""
+        if self.app_state.rol_actual == 1:
+            self.crear_cuadro_botones_rol_1()  # Diseño para rol 1
+        else:
+            self.crear_cuadro_botones_rol_2()  # Diseño para rol 2
+
+    def crear_cuadro_botones_rol_1(self):
         """Crea el cuadro central con botones."""
         cuadro_botones = ctk.CTkFrame(self, fg_color="#fcf3cf", width=600, height=400)
         cuadro_botones.grid(
@@ -85,7 +99,7 @@ class DashboardVista(ctk.CTk):
             width=200,
             height=70,
             corner_radius=25,
-            fg_color="#85c1e9",
+            fg_color="#e59866",
             text_color="black",
             font=("Arial", 30, "bold"),
         )
@@ -97,7 +111,7 @@ class DashboardVista(ctk.CTk):
             width=200,
             height=70,
             corner_radius=25,
-            fg_color="#85c1e9",
+            fg_color="#e59866",
             text_color="black",
             font=("Arial", 30, "bold"),
             command=self.cambiar_a_clientes,
@@ -110,12 +124,99 @@ class DashboardVista(ctk.CTk):
             width=200,
             height=70,
             corner_radius=25,
-            fg_color="#85c1e9",
+            fg_color="#e59866",
             text_color="black",
             font=("Arial", 30, "bold"),
             command=self.cambiar_a_trabajadores,
         )
         boton_trabajadores.grid(row=1, column=1, padx=40, pady=30, sticky="nsew")
+        # Botón de Reporte
+        boton_reporte = ctk.CTkButton(
+            cuadro_botones,
+            text="Reporte",
+            width=200,
+            height=70,
+            corner_radius=25,
+            fg_color="#e59866",
+            text_color="black",
+            font=("Arial", 30, "bold"),
+        )
+        boton_reporte.grid(row=2, column=0, padx=40, pady=30, sticky="nsew")
+
+        # Botón de Gráficos
+        boton_graficos = ctk.CTkButton(
+            cuadro_botones,
+            text="Gráficos",
+            width=200,
+            height=70,
+            corner_radius=25,
+            fg_color="#e59866",
+            text_color="black",
+            font=("Arial", 30, "bold"),
+        )
+        boton_graficos.grid(row=2, column=1, padx=40, pady=30, sticky="nsew")
+
+
+        cuadro_botones.grid_rowconfigure(0, weight=1)
+        cuadro_botones.grid_rowconfigure(1, weight=1)
+        cuadro_botones.grid_rowconfigure(2, weight=1)
+        cuadro_botones.grid_columnconfigure(0, weight=1)
+        cuadro_botones.grid_columnconfigure(1, weight=1)
+
+
+        self.grid_rowconfigure(0, weight=0)  # Encabezado
+        self.grid_rowconfigure(1, weight=1)  # Cuadro botones
+        self.grid_rowconfigure(2, weight=0)  # Pie de página
+        self.grid_columnconfigure(0, weight=1)
+        self.grid_columnconfigure(1, weight=1)
+        self.grid_columnconfigure(2, weight=1)
+        
+    def crear_cuadro_botones_rol_2(self):
+        """Crea el cuadro central con botones para rol 2, expandiendo el diseño."""
+        cuadro_botones = ctk.CTkFrame(self, fg_color="#fcf3cf", width=600, height=400)
+        cuadro_botones.grid(row=1, column=0, columnspan=3, padx=10, pady=10, sticky="nsew")
+
+        # Botón de Venta
+        boton_venta = ctk.CTkButton(
+            cuadro_botones,
+            text="Venta",
+            width=200,
+            height=70,
+            corner_radius=25,
+            fg_color="#e59866",
+            text_color="black",
+            font=("Arial", 30, "bold"),
+        )
+        boton_venta.grid(row=0, column=0, padx=40, pady=30, sticky="nsew")
+
+        # Botón de Gestión de Productos (expandido para rol 2)
+        boton_clientes = ctk.CTkButton(
+            cuadro_botones,
+            text="Gestión de clientes",
+            width=200,
+            height=70,
+            corner_radius=25,
+            fg_color="#e59866",
+            text_color="black",
+            font=("Arial", 30, "bold"),
+            command=self.cambiar_a_clientes,
+        )
+
+        boton_clientes.grid(row=0, column=1, padx=40, pady=30, sticky="nsew")
+
+        # Botón de Gestión de Clientes
+        boton_productos = ctk.CTkButton(
+            cuadro_botones,
+            text="Gestión de productos",
+            width=400,
+            height=70,
+            corner_radius=25,
+            fg_color="#e59866",
+            text_color="black",
+            font=("Arial", 30, "bold"),
+            command=self.cambiar_a_productos,
+        )
+        boton_productos.grid(row=1, column=0,columnspan=2, padx=40, pady=30, sticky="nsew")
 
         cuadro_botones.grid_rowconfigure(0, weight=1)
         cuadro_botones.grid_rowconfigure(1, weight=1)
@@ -134,12 +235,10 @@ class DashboardVista(ctk.CTk):
         cuadro_inferior = ctk.CTkFrame(self, fg_color="#fcf3cf", height=150, width=800)
         cuadro_inferior.grid(row=3, column=0, columnspan=3, padx=10, pady=10, sticky="ew")
 
-
-
         boton = ctk.CTkButton(
             cuadro_inferior,
             text="Cerrar sesión",
-            command=self.cambiar_a_login,
+            command=self.cerrar_sesion,
             fg_color="gray",
             height=50,
             text_color="black",
@@ -157,3 +256,21 @@ class DashboardVista(ctk.CTk):
         cuadro_inferior.grid_rowconfigure(0, weight=1)
         cuadro_inferior.grid_rowconfigure(1, weight=1)
         cuadro_inferior.grid_columnconfigure(0, weight=1)
+
+    def cerrar_sesion(self):
+        """Restablecer el estado de sesión y redirigir al login tras confirmación."""
+        # Mostrar mensaje de confirmación
+        confirmacion = messagebox.askyesno(
+            "Confirmar cierre de sesión",
+            "¿Estás seguro de que quieres cerrar sesión?",
+        )
+        
+        if confirmacion:
+            # Si el usuario confirma, cerrar sesión
+            self.app_state.cerrar_sesion()
+            messagebox.showinfo("Cerrar sesión", "La sesión se ha cerrado correctamente.")
+            self.cambiar_a_login()
+        else:
+            # Si el usuario cancela, no hacer nada
+            messagebox.showinfo("Cerrar sesión cancelada", "Continuando en el dashboard.")
+

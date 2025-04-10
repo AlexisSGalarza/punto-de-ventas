@@ -2,34 +2,22 @@ import customtkinter as ctk
 from PIL import Image, ImageDraw
 import app.agregar_producto as ap
 import app.modificar_producto as mp
+import app.Productos as productos
+from tkinter import messagebox
 
-# Datos de productos de la tienda
-productos = [
-    # Datos de productos con un campo adicional de "ID Producto"
-    ("id_1","Arroz", "Paquete de 1kg", "PRD001", "25.00", "Granos", "50"),
-    ("id_1","Azúcar", "Paquete de 1kg", "PRD002", "20.00", "Endulzantes", "100"),
-    ("id_1","Leche", "Caja de 1L", "PRD003", "22.00", "Lácteos", "80"),
-    ("id_1","Pan", "Bolsa de 10 piezas", "PRD004", "18.00", "Panadería", "60"),
-    ("id_1","Aceite", "Botella de 1L", "PRD005", "45.00", "Aceites", "30"),
-    # Generar dinámicamente productos con su ID único y stock aleatorio
-    *[
-        (f"ID-{str(i).zfill(3)}", f"Producto {i}", f"Descripción {i}", f"PRD{str(i).zfill(3)}", f"{10 + i}.00", "Categoría", str(20 + i))
-        for i in range(6, 21)
-    ]
-]
-
-class TiendaApp(ctk.CTk):
-    def __init__(self):
+class productosventana(ctk.CTk):
+    def __init__(self,cambiar_a_dashboard):
         super().__init__()
 
         self.title("📦 Tienda de Abarrotes - Inventario")
         self.geometry("1920x1080")
         self.configure(fg_color="#fcf3cf")
         self.attributes("-fullscreen", True)
+        self.cambiar_a_dashboard = cambiar_a_dashboard
 
         self.current_page = 1  # Página actual
         self.items_per_page = 10  # Número de productos por página
-        self.filtered_productos = productos.copy()  # Lista inicial sin filtrar
+        self.filtered_productos = productos.obtener_productos()  # Lista inicial sin filtrar
 
         # Crear encabezado
         self.crear_encabezado()
@@ -42,7 +30,7 @@ class TiendaApp(ctk.CTk):
         self.search_frame.grid_columnconfigure(1, weight=1)  # Centrar el buscador
         self.search_frame.grid_columnconfigure(2, weight=0)  # Alinear "Buscar" a la derecha
 
-        self.add_product_button = ctk.CTkButton(self.search_frame, text="➕ Agregar Producto", fg_color="#2ecc71", text_color="white", command=ap.agregarproducto)
+        self.add_product_button = ctk.CTkButton(self.search_frame, text="➕ Agregar Producto", fg_color="#2ecc71", text_color="white", command=self.abrir_agregar_producto)
         self.add_product_button.grid(row=0, column=0, padx=5, pady=5, sticky="w")
 
         self.search_entry = ctk.CTkEntry(self.search_frame, placeholder_text="🔍 Buscar producto...", width=300, fg_color="white", text_color="black")
@@ -66,7 +54,7 @@ class TiendaApp(ctk.CTk):
         self.pagination_frame.grid_columnconfigure(1, weight=1)  # Botón "Regresar al Dashboard"
         self.pagination_frame.grid_columnconfigure(2, weight=1)  # Botón "Siguiente"
 
-        self.back_button = ctk.CTkButton(self.pagination_frame, text="🏠 Regresar al Dashboard", command=self.regresar_dashboard, fg_color="#2ecc71", text_color="white")
+        self.back_button = ctk.CTkButton(self.pagination_frame, text="🏠 Regresar al Dashboard", command=self.cambiar_a_dashboard, fg_color="#2ecc71", text_color="white")
         self.back_button.grid(row=0, column=0, padx=5, sticky="w")
 
         self.prev_button = ctk.CTkButton(self.pagination_frame, text="⬅ Anterior", command=self.previous_page, fg_color="white", text_color="black")
@@ -78,6 +66,30 @@ class TiendaApp(ctk.CTk):
         # Llenar la tabla
         self.populate_table()
 
+        self.after(200, self.check_stock)   # Verificar el stock de los productos al iniciar la ventana
+
+    def actualizar_tabla(self):
+    # Recupera todos los trabajadores desde la base de datos
+        self.filtered_productos = productos.obtener_productos()
+        self.current_page = 1  # Reinicia a la primera página
+        self.populate_table()  # Vuelve a llenar la tabla con toda la información
+
+    def abrir_agregar_producto(self):
+        ap.agregar_producto(on_close_callback=self.actualizar_tabla)
+
+    def modificar_producto(self, id_producto):
+        mp.modificar_producto(id_producto, on_close_callback=self.actualizar_tabla)
+
+    def eliminar_producto(self, id_producto):
+        from tkinter import messagebox
+        if messagebox.askyesno("Confirmar", f"¿Estás seguro de que deseas eliminar al Producto con ID {id_producto}?"):
+            try: # Asegúrate de tener acceso al módulo
+                productos.eliminar_producto(id_producto)  # Llama a la función que elimina al trabajador
+                messagebox.showinfo("Éxito", f"El Producto con ID {id_producto} ha sido eliminado.")
+                self.actualizar_tabla()  # Actualiza la tabla después de eliminar
+            except Exception as e:
+                messagebox.showerror("Error", f"No se pudo eliminar al Producto: {e}")
+    
     def crear_encabezado(self):
         """Crea el encabezado principal."""
         encabezado = ctk.CTkFrame(self, fg_color="#f4d03f", height=100)
@@ -109,10 +121,16 @@ class TiendaApp(ctk.CTk):
 
     def buscar_producto(self):
         """Filtra productos según la búsqueda."""
-        query = self.search_entry.get().lower()
-        self.filtered_productos = [p for p in productos if query in p[0].lower()]
-        self.current_page = 1
-        self.populate_table()
+        query = self.search_entry.get().lower()  # Texto ingresado en el buscador
+        
+        # Filtrar productos por nombre, código de barras o código de producto
+        self.filtered_productos = [
+            p for p in productos.obtener_productos()
+            if query in p[1].lower() or query in p[3].lower() or query in p[4].lower()  # p[1]: Nombre, p[3]: Código de barras, p[4]: Código de producto
+        ]
+        
+        self.current_page = 1  # Reinicia la paginación al comenzar una nueva búsqueda
+        self.populate_table()  # Actualiza la tabla con los resultados filtrados # Actualiza la tabla con los resultados filtrados
 
     def populate_table(self):
         """Llena la tabla con los productos filtrados."""
@@ -120,36 +138,55 @@ class TiendaApp(ctk.CTk):
             widget.destroy()  # Limpiar la tabla existente
 
         # Encabezados de la tabla, incluyendo "Stock"
-        headers = ["ID Producto", "Producto", "Descripción", "Código Producto", "Precio ($)", "Categoría", "Stock", "Acciones"]
+        headers = ["ID Producto", "Producto", "Descripción", "Código barras","Código de producto", "Categoría", "Precio ($)", "Stock", "Acciones"]
         for col, header in enumerate(headers):
-            lbl = ctk.CTkLabel(self.frame_table, text=header, font=("Arial", 18, "bold"), fg_color="#f4d03f", text_color="black")
-            lbl.grid(row=0, column=col, sticky="nsew", padx=2, pady=2)
-
+                    lbl = ctk.CTkLabel(self.frame_table, text=header, font=("Arial", 18, "bold"), fg_color="#f4d03f", text_color="black")
+                    lbl.grid(row=0, column=col, sticky="nsew", padx=2, pady=2)
+        
+        all_items = self.filtered_productos
+        
+        # Configuración de columnas
         for col in range(len(headers)):
-            self.frame_table.grid_columnconfigure(col, weight=1)
+            if col == len(headers) - 1:  # Última columna (botones)
+                self.frame_table.grid_columnconfigure(col, weight=1, minsize=150)  # Prioridad menor y tamaño mínimo
+            else:
+                self.frame_table.grid_columnconfigure(col, weight=2 if col < 3 else 1)
 
         start = (self.current_page - 1) * self.items_per_page
         end = start + self.items_per_page
         page_items = self.filtered_productos[start:end]
 
         for row, item in enumerate(page_items, start=1):
-            for col, value in enumerate(item):
+            # Insertar el ID en la primera columna
+            lbl_id = ctk.CTkLabel(self.frame_table, text=item[0], font=("Arial", 14), text_color="black", padx=2)
+            lbl_id.grid(row=row, column=0, sticky="nsew", pady=2)
+
+            # Llenar las columnas restantes con los datos de 'item'
+            for col, value in enumerate(item[1:]):  # Empezamos desde el índice 1 para excluir el ID
                 lbl = ctk.CTkLabel(self.frame_table, text=value, font=("Arial", 14), text_color="black", padx=2)
-                lbl.grid(row=row, column=col, sticky="nsew", pady=2)
+                lbl.grid(row=row, column=col + 1, sticky="nsew", pady=2)
+
 
             button_frame = ctk.CTkFrame(self.frame_table, fg_color="transparent")
             button_frame.grid(row=row, column=len(headers) - 1, sticky="w", padx=2, pady=2)
 
             # Botón Editar
-            btn_edit = ctk.CTkButton(button_frame, text="✏ Editar", fg_color="#2471a3", text_color="white", width=50, command=mp.modificar_producto)
+            btn_edit = ctk.CTkButton(button_frame, text="✏ Editar", fg_color="#2471a3", text_color="white", width=50, command=lambda id_producto=item[0]: self.modificar_producto(id_producto))
             btn_edit.pack(side="left", padx=5)
 
             # Botón Eliminar
-            btn_delete = ctk.CTkButton(button_frame, text="🗑 Eliminar", fg_color="#e74c3c", text_color="white", width=50, command='')
+            btn_delete = ctk.CTkButton(button_frame, text="🗑 Eliminar", fg_color="#e74c3c", text_color="white", width=50, command=lambda id_producto=item[0]: self.eliminar_producto(id_producto))
             btn_delete.pack(side="left", padx=5)
 
         for row in range(len(page_items) + 1):  # Incluye encabezados y filas de contenido
             self.frame_table.grid_rowconfigure(row, weight=1)
+    
+    def check_stock(self):
+        for item in self.filtered_productos:
+            stock = int(item[7])  # Asegúrate de que el índice 7 corresponde al stock
+            if stock <= 1:
+                # Mostrar alerta
+                messagebox.showwarning("Alerta de Stock", f"El producto '{item[1]}' tiene un stock bajo ({stock} unidades).")
 
     def previous_page(self):
         """Cambia a la página anterior."""
@@ -162,12 +199,6 @@ class TiendaApp(ctk.CTk):
         if self.current_page < (len(self.filtered_productos) - 1) // self.items_per_page + 1:
             self.current_page += 1
             self.populate_table()
-
-    def regresar_dashboard(self):
-        """Regresa al Dashboard principal."""
-        print("Regresando al Dashboard...")
-
-
 
     def redondear_bordes(self, imagen, radio):
         """Redondea los bordes de una imagen."""
@@ -183,5 +214,5 @@ class TiendaApp(ctk.CTk):
 
 
 if __name__ == "__main__":
-    app = TiendaApp()
+    app = productosventana()
     app.mainloop()

@@ -78,7 +78,6 @@ class VentanaTrabajadores(ctk.CTk):
         at.agregartrabajador(on_close_callback=self.actualizar_tabla)
 
     def modificar_trabajador(self, id_trabajador):
-        """Abre el modal de modificación para el trabajador con el ID dado."""
         mt.modificartrabajador(id_trabajador, on_close_callback=self.actualizar_tabla)
 
     def eliminar_trabajador(self, id_trabajador):

@@ -3,13 +3,14 @@ import pandas as pd
 import customtkinter as ctk
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from PIL import Image, ImageDraw
+import app.graficos as graficos  # Asegúrate de que este módulo esté en la misma carpeta o ajusta la ruta
 
 class DashboardApp(ctk.CTk):
     def __init__(self):
         super().__init__()
 
         self.title("📊 Dashboard de Ventas")
-        self.geometry("1200x800")  # Tamaño inicial ajustado
+        self.geometry("1920x1080")  # Tamaño inicial ajustado
         self.configure(fg_color="#fcf3cf")  # Fondo claro
 
         # Configuración para que las filas y columnas se expandan dinámicamente
@@ -107,24 +108,35 @@ class DashboardApp(ctk.CTk):
             widget.destroy()
 
     def grafico_productos(self):
-        """Crea y muestra el gráfico de productos más vendidos."""
+        """Crea y muestra el gráfico de productos más vendidos usando el módulo graficos."""
+        data = graficos.obtener_productos_mas_vendidos()
+        if data is None or data.empty:
+            print("No se pudieron obtener datos de productos más vendidos.")
+            return
+
         fig, ax = plt.subplots(figsize=(6, 4))
-        ax.bar(self.data_productos["Producto"], self.data_productos["Total_Vendido"], color="deepskyblue")
+        ax.bar(data["ProductoID"], data["CantidadVendida"], color="deepskyblue")
         ax.set_title("Productos Más Vendidos", fontsize=14, fontweight="bold")
         ax.set_ylabel("Cantidad Vendida")
-        ax.set_xlabel("Productos")
+        ax.set_xlabel("ID Producto")
         ax.tick_params(axis="x", rotation=45)
         ax.grid(axis="y", linestyle="--", alpha=0.7)
 
         self.mostrar_grafico(fig)
 
+
     def grafico_trabajadores(self):
-        """Crea y muestra el gráfico de ventas por trabajador."""
+        """Crea y muestra el gráfico de ventas por trabajador usando el módulo graficos."""
+        data = graficos.obtener_ventas_por_trabajador()
+        if data is None or data.empty:
+            print("No se pudieron obtener datos de ventas por trabajador.")
+            return
+
         fig, ax = plt.subplots(figsize=(6, 4))
-        ax.bar(self.data_trabajadores["Trabajador"], self.data_trabajadores["Total_Ventas"], color="lightcoral")
+        ax.bar(data["TrabajadorID"], data["TotalVentas"], color="lightcoral")
         ax.set_title("Ventas por Trabajador", fontsize=14, fontweight="bold")
-        ax.set_ylabel("Total Ventas ($)")
-        ax.set_xlabel("Trabajadores")
+        ax.set_ylabel("Número de Ventas")
+        ax.set_xlabel("ID Trabajador")
         ax.tick_params(axis="x", rotation=45)
         ax.grid(axis="y", linestyle="--", alpha=0.7)
 
