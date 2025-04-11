@@ -5,13 +5,14 @@ from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from PIL import Image, ImageDraw
 import app.graficos as graficos  # Asegúrate de que este módulo esté en la misma carpeta o ajusta la ruta
 
-class DashboardApp(ctk.CTk):
-    def __init__(self):
+class ventanagraficos(ctk.CTk):
+    def __init__(self, cambiar_a_dashboard):
         super().__init__()
-
-        self.title("📊 Dashboard de Ventas")
+        self.title("ventana graficos")
+        self.cambiar_a_dashboard = cambiar_a_dashboard 
         self.geometry("1920x1080")  # Tamaño inicial ajustado
         self.configure(fg_color="#fcf3cf")  # Fondo claro
+        self.attributes("-fullscreen", True)
 
         # Configuración para que las filas y columnas se expandan dinámicamente
         self.grid_rowconfigure(0, weight=1)  # Encabezado
@@ -58,9 +59,10 @@ class DashboardApp(ctk.CTk):
         # Texto del encabezado
         texto_encabezado = ctk.CTkLabel(
             encabezado,
-            text="Dashboard de Ventas",
+            text="Graficos de Ventas",
+            corner_radius=10,
             font=("Arial", 50, "bold"),
-            text_color="black"
+            text_color="black",
         )
         texto_encabezado.grid(row=0, column=1, padx=10, pady=10, sticky="ew")
 
@@ -90,7 +92,7 @@ class DashboardApp(ctk.CTk):
 
         footer.grid_columnconfigure(0, weight=1)
 
-        btn_regresar = ctk.CTkButton(footer, text="⬅ Regresar al Dashboard", command=self.limpiar_graficos, fg_color="#2ecc71", text_color="white")
+        btn_regresar = ctk.CTkButton(footer, text="⬅ Regresar al Dashboard", command=self.cambiar_a_dashboard , fg_color="#2ecc71", text_color="white")
         btn_regresar.grid(row=0, column=0, padx=10, pady=10, sticky="w")
 
     def mostrar_grafico(self, fig):
@@ -153,5 +155,5 @@ class DashboardApp(ctk.CTk):
 
 # Ejecutar aplicación
 if __name__ == "__main__":
-    app = DashboardApp()
+    app = ventanagraficos()
     app.mainloop()

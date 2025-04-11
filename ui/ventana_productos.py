@@ -1,4 +1,4 @@
-import customtkinter as ctk
+import  customtkinter as ctk
 from PIL import Image, ImageDraw
 import app.agregar_producto as ap
 import app.modificar_producto as mp

@@ -85,9 +85,12 @@ class VentanaLogin(ctk.CTk):
                 return
 
             if resultado:
-                self.app_state.usuario_actual = resultado["Nombre_tr"]
-                self.app_state.rol_actual = resultado["Rol_tr"]
-                self.app_state.sesion_iniciada = True
+                print(f"Resultado del login: {resultado}")  # Depuración
+                self.app_state.iniciar_sesion(
+                            id=resultado["ID_tr"],  # ID del usuario
+                            usuario=resultado["Nombre_tr"],  # Nombre del usuario
+                            rol=resultado["Rol_tr"]  # Rol del usuario
+                        )
                 self.cambiar_a_principal()
             else:
                 self.label_mensaje.configure(text="Usuario o contraseña incorrectos", text_color="red")

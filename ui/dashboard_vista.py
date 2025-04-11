@@ -1,9 +1,10 @@
 import customtkinter as ctk
 from PIL import Image, ImageDraw
 from tkinter import messagebox
+from datetime import datetime
 
 class DashboardVista(ctk.CTk):
-    def __init__(self, cambiar_a_clientes, cambiar_a_trabajadores,cambiar_a_login, app_state, cambiar_a_productos):
+    def __init__(self, cambiar_a_clientes, cambiar_a_trabajadores, cambiar_a_login, app_state, cambiar_a_productos, cambiar_a_reportes, cambiar_a_graficos, cambiar_a_principal):
         super().__init__()
         self.title("Dashboard - Abarrotes Gael")
         self.geometry("1920x1080")
@@ -13,7 +14,10 @@ class DashboardVista(ctk.CTk):
         self.cambiar_a_trabajadores = cambiar_a_trabajadores
         self.cambiar_a_login = cambiar_a_login
         self.cambiar_a_productos = cambiar_a_productos
+        self.cambiar_a_reportes = cambiar_a_reportes
+        self.cambiar_a_graficos = cambiar_a_graficos
         self.app_state = app_state
+        self.cambiar_a_principal = cambiar_a_principal
 
         if not self.app_state.sesion_iniciada:
             messagebox.showerror("Acceso denegado", "Debe iniciar sesión para acceder al dashboard.")
@@ -87,9 +91,10 @@ class DashboardVista(ctk.CTk):
             width=200,
             height=70,
             corner_radius=25,
-            fg_color="#85c1e9",
+            fg_color="#e59866",
             text_color="black",
             font=("Arial",30, "bold"),
+            command=self.cambiar_a_principal,
         )
         boton_venta.grid(row=0, column=0, padx=40, pady=30, sticky="nsew")
 
@@ -102,6 +107,7 @@ class DashboardVista(ctk.CTk):
             fg_color="#e59866",
             text_color="black",
             font=("Arial", 30, "bold"),
+            command=self.cambiar_a_productos,
         )
         boton_productos.grid(row=0, column=1, padx=40, pady=30, sticky="nsew")
 
@@ -130,6 +136,7 @@ class DashboardVista(ctk.CTk):
             command=self.cambiar_a_trabajadores,
         )
         boton_trabajadores.grid(row=1, column=1, padx=40, pady=30, sticky="nsew")
+
         # Botón de Reporte
         boton_reporte = ctk.CTkButton(
             cuadro_botones,
@@ -140,6 +147,7 @@ class DashboardVista(ctk.CTk):
             fg_color="#e59866",
             text_color="black",
             font=("Arial", 30, "bold"),
+            command=self.cambiar_a_reportes,
         )
         boton_reporte.grid(row=2, column=0, padx=40, pady=30, sticky="nsew")
 
@@ -153,6 +161,7 @@ class DashboardVista(ctk.CTk):
             fg_color="#e59866",
             text_color="black",
             font=("Arial", 30, "bold"),
+            command=self.cambiar_a_graficos,
         )
         boton_graficos.grid(row=2, column=1, padx=40, pady=30, sticky="nsew")
 
@@ -186,6 +195,7 @@ class DashboardVista(ctk.CTk):
             fg_color="#e59866",
             text_color="black",
             font=("Arial", 30, "bold"),
+            command=self.cambiar_a_principal,
         )
         boton_venta.grid(row=0, column=0, padx=40, pady=30, sticky="nsew")
 
@@ -245,17 +255,28 @@ class DashboardVista(ctk.CTk):
         )
         boton.grid(row=0, column=0, padx=20, pady=10, sticky="ew")
 
-        hora_fecha = ctk.CTkLabel(
+        self.hora_fecha = ctk.CTkLabel(
             cuadro_inferior,
-            text="07:05 p.m. - 23/03/2025",
+            text="",  # Inicialmente vacío
             font=("Arial", 14, "italic"),
             text_color="black",
         )
-        hora_fecha.grid(row=1, column=0, padx=20, pady=10, sticky="ew")
+        self.hora_fecha.grid(row=1, column=0, padx=20, pady=10, sticky="ew")
 
+        # Configurar el diseño del cuadro inferior
         cuadro_inferior.grid_rowconfigure(0, weight=1)
         cuadro_inferior.grid_rowconfigure(1, weight=1)
         cuadro_inferior.grid_columnconfigure(0, weight=1)
+
+        # Iniciar la actualización de la hora
+        self.actualizar_hora()
+
+    def actualizar_hora(self):
+        """Actualiza la hora y programa la próxima actualización."""
+        fecha_hora_actual = datetime.now().strftime("%I:%M:%S %p - %d/%m/%Y")
+        self.hora_fecha.configure(text=fecha_hora_actual)
+        # Volver a llamar a esta función después de 1 segundo (1000 ms)
+        self.after(1000, self.actualizar_hora)
 
     def cerrar_sesion(self):
         """Restablecer el estado de sesión y redirigir al login tras confirmación."""

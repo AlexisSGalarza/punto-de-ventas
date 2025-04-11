@@ -1,44 +1,53 @@
 from reportlab.pdfgen import canvas
-from reportlab.lib.pagesizes import inch
+from reportlab.lib.pagesizes import letter
+from reportlab.lib import colors
 from datetime import datetime
+import os
 
-# Definir el tamaño personalizado para el ticket (80 mm x 150 mm)
-# 80 mm = 226 puntos y 150 mm = 425 puntos
-custom_size = (226, 425)
-
-def generar_ticket_pdf(nombre_cliente, producto, precio, filename="ticket.pdf"):
-    # Obtener la fecha y hora actuales
-    fecha = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+def generar_ticket_pdf(total, metodo_pago):
+    # Crear directorio de tickets si no existe
+    if not os.path.exists('tickets'):
+        os.makedirs('tickets')
     
-    # Crear el objeto canvas con el tamaño de ticket personalizado
-    c = canvas.Canvas(filename, pagesize=custom_size)
-    width, height = custom_size  # Tamaño de la página personalizada
-
-    # Título del ticket
+    # Generar nombre del archivo con fecha y hora
+    fecha_hora = datetime.now().strftime("%Y%m%d_%H%M%S")
+    nombre_archivo = f'tickets/ticket_{fecha_hora}.pdf'
+    
+    # Crear el PDF
+    c = canvas.Canvas(nombre_archivo, pagesize=letter)
+    width, height = letter
+    
+    # Configurar fuente y tamaño
+    c.setFont("Helvetica-Bold", 16)
+    
+    # Encabezado
+    c.drawString(50, height - 50, "TIENDA DE ABARROTES")
+    c.setFont("Helvetica", 12)
+    c.drawString(50, height - 70, "Dirección: Calle Principal #123")
+    c.drawString(50, height - 85, f"Fecha: {datetime.now().strftime('%d/%m/%Y %H:%M:%S')}")
+    
+    # Línea separadora
+    c.line(50, height - 100, width - 50, height - 100)
+    
+    # Detalles de la venta
     c.setFont("Helvetica-Bold", 12)
-    c.drawString(20, height - 40, "------------------------------")
-    c.drawString(20, height - 60, "        TICKET DE COMPRA       ")
-    c.drawString(20, height - 80, "------------------------------")
-    
-    # Detalles de la compra
+    c.drawString(50, height - 120, "DETALLES DE LA VENTA")
     c.setFont("Helvetica", 10)
-    c.drawString(20, height - 120, f"Nombre del Cliente: {nombre_cliente}")
-    c.drawString(20, height - 140, f"Producto: {producto}")
-    c.drawString(20, height - 160, f"Precio: ${precio:.2f}")
-    c.drawString(20, height - 180, f"Fecha de Compra: {fecha}")
     
-    # Mensaje de agradecimiento
-    c.drawString(20, height - 200, "------------------------------")
-    c.drawString(20, height - 220, "      ¡Gracias por su compra!  ")
-    c.drawString(20, height - 240, "------------------------------")
+    # Método de pago
+    c.drawString(50, height - 140, f"Método de pago: {metodo_pago.upper()}")
+    
+    # Total
+    c.setFont("Helvetica-Bold", 12)
+    c.drawString(50, height - 160, f"TOTAL: ${total:.2f}")
+    
+    # Pie de página
+    c.setFont("Helvetica", 8)
+    c.drawString(50, 50, "¡Gracias por su compra!")
+    c.drawString(50, 40, "Vuelva pronto")
     
     # Guardar el PDF
     c.save()
-
-# Datos de ejemplo
-nombre_cliente = "Juan Pérez"
-producto = "Camiseta"
-precio = 19.99
-
-# Generar el ticket en PDF
-generar_ticket_pdf(nombre_cliente, producto, precio)
+    
+    # Abrir el PDF automáticamente
+    os.startfile(nombre_archivo)

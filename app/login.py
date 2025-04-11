@@ -10,7 +10,7 @@ def autentacacion_login(usuario, contrasena):
 
         # Seleccionar el nombre, el rol y la contraseña hasheada
         consulta = """
-            SELECT Nombre_tr, Rol_tr, Contraseña_tr 
+            SELECT ID_tr,Nombre_tr, Rol_tr, Contraseña_tr 
             FROM trabajadores
             WHERE Usuario_tr = %s
         """
@@ -25,7 +25,11 @@ def autentacacion_login(usuario, contrasena):
             hash_almacenado = resultado["Contraseña_tr"].encode('utf-8')  # Convertir el hash a bytes
             if bcrypt.checkpw(contrasena.encode('utf-8'), hash_almacenado):
                 # Si la contraseña coincide, retorna el nombre y el rol
-                return {"Nombre_tr": resultado["Nombre_tr"], "Rol_tr": resultado["Rol_tr"]}
+                return {
+                    "ID_tr": resultado["ID_tr"],
+                    "Nombre_tr": resultado["Nombre_tr"],
+                    "Rol_tr": resultado["Rol_tr"]
+                }
             else:
                 return None  # Contraseña incorrecta
         else:

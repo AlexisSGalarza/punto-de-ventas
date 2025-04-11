@@ -4,7 +4,6 @@ import app.agregar_trabajador as at
 import app.modificar_trabajador as mt
 import app.trabajadores as trabajadores_db
 
-
 class VentanaTrabajadores(ctk.CTk):
     def __init__(self, cambiar_a_dashboard):
         super().__init__()
@@ -192,9 +191,6 @@ class VentanaTrabajadores(ctk.CTk):
         if self.current_page < (len(self.filtered_trabajadores) - 1) // self.items_per_page + 1:
             self.current_page += 1
             self.populate_table()
-
-            
-
 
     def redondear_bordes(self, imagen, radio):
         """Redondea los bordes de una imagen."""

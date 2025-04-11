@@ -5,6 +5,8 @@ from ui.dashboard_vista import DashboardVista
 from ui.ventana_trabajadores import VentanaTrabajadores
 from ui.ventan_clientes import VentanaClientes
 from ui.ventana_productos import productosventana
+from ui.ventana_reportes import VentanaReportes
+from ui.graficos_vista import ventanagraficos
 from globales import AppState
 
 def main():
@@ -15,11 +17,36 @@ def main():
         nonlocal ventana_actual
         if ventana_actual:  # Cierra la ventana actual si existe
             ventana_actual.destroy()             
-        ventana_dashboard = DashboardVista(abrir_clientes, abrir_trabajadores, abrir_login,app_state,abir_productos)  # Agrega abrir_login
-        ventana_actual = ventana_dashboard  # Actualiza la ventana actual
+        ventana_dashboard = DashboardVista(
+            abrir_clientes, 
+            abrir_trabajadores, 
+            abrir_login, 
+            app_state, 
+            abrir_productos, 
+            abrir_reportes, 
+            abrir_graficos,
+            abrir_principal
+        )
+        ventana_actual = ventana_dashboard
         ventana_dashboard.mainloop()
     
-    def abir_productos():
+    def abrir_graficos():
+        nonlocal ventana_actual
+        if ventana_actual:
+            ventana_actual.destroy()
+        ventana_graficos = ventanagraficos(abrir_dashboard)
+        ventana_actual = ventana_graficos
+        ventana_graficos.mainloop()
+
+    def abrir_reportes():
+        nonlocal ventana_actual
+        if ventana_actual:
+            ventana_actual.destroy()
+        ventana_reportes = VentanaReportes(abrir_dashboard, abrir_graficos)
+        ventana_actual = ventana_reportes
+        ventana_reportes.mainloop()
+
+    def abrir_productos():
         nonlocal ventana_actual
         if ventana_actual:
             ventana_actual.destroy()
@@ -39,16 +66,15 @@ def main():
         nonlocal ventana_actual
         if ventana_actual:
             ventana_actual.destroy()
-        ventana_trabajadores = VentanaTrabajadores(abrir_dashboard)  # Pasar la función abrir_dashboard
+        ventana_trabajadores = VentanaTrabajadores(abrir_dashboard)
         ventana_actual = ventana_trabajadores
         ventana_trabajadores.mainloop()
-
 
     def abrir_principal():
         nonlocal ventana_actual
         if ventana_actual:
             ventana_actual.destroy()
-        ventana_principal = VentanaPrincipal(abrir_dashboard)
+        ventana_principal = VentanaPrincipal(abrir_dashboard,app_state)
         ventana_actual = ventana_principal
         ventana_principal.mainloop()
 
@@ -56,7 +82,7 @@ def main():
         nonlocal ventana_actual
         if ventana_actual:
             ventana_actual.destroy()
-        ventana_login = VentanaLogin(abrir_principal,app_state)
+        ventana_login = VentanaLogin(abrir_principal, app_state)
         ventana_actual = ventana_login
         ventana_login.mainloop()
 
