@@ -7,6 +7,7 @@ from datetime import datetime
 import app.Productos as ve
 import tkinter.messagebox as messagebox
 import app.carrito as ca
+import app.agregar_cliente as ac
 
 class VentanaPrincipal(ctk.CTk):
     def __init__(self,abrir_dashboard, app_state,*args, **kwargs):
@@ -248,7 +249,6 @@ class VentanaPrincipal(ctk.CTk):
             messagebox.showerror("Error", f"No se pudieron cargar los productos: {str(e)}")
 
     def buscar_productos_en_modal(self):
-        """Busca productos en el modal según el texto ingresado."""
         texto_busqueda = self.modal_search_entry.get().strip()
 
         try:
@@ -333,7 +333,6 @@ class VentanaPrincipal(ctk.CTk):
             return False, f"Error al agregar al carrito: {str(e)}"
 
     def mostrar_resultados_modal(self, productos):
-        """Muestra los productos dentro del modal con validación de cantidad."""
         for widget in self.resultados_frame.winfo_children():
             widget.destroy()  # Limpiar resultados previos
 
@@ -412,22 +411,18 @@ class VentanaPrincipal(ctk.CTk):
             boton_agregar.grid(row=fila, column=4, padx=10, pady=5, sticky="nsew")
 
     def next_page(self):
-        """Muestra la siguiente página de productos."""
         if (self.current_page + 1) * self.items_per_page < len(self.productos_encontrados):
             self.current_page += 1
             self.mostrar_resultados_modal(self.productos_encontrados)
 
     def previous_page(self):
-        """Muestra la página anterior de productos."""
         if self.current_page > 0:
             self.current_page -= 1
             self.mostrar_resultados_modal(self.productos_encontrados)
     def cerrar_modal(self):
-        """Cierra el modal de búsqueda."""
         self.modal_busqueda.destroy()
 
     def tabla_encabezados(self):
-        """Crea la tabla que actúa como carrito de compras."""
         # Inicializar el carrito como una lista vacía
         if not hasattr(self, 'carrito'):
             self.carrito = []  # Lista para gestionar los productos del carrito
@@ -478,7 +473,6 @@ class VentanaPrincipal(ctk.CTk):
 
         # Mostrar productos en el carrito
         def actualizar_tabla_carrito():
-            """Actualiza las filas de la tabla según los productos en el carrito."""
             for widget in cuadro_productos.winfo_children():
                 widget.destroy()  # Limpiar filas previas
             
@@ -514,7 +508,6 @@ class VentanaPrincipal(ctk.CTk):
                 boton_eliminar.grid(row=fila, column=6, padx=10, pady=5, sticky="nsew")
 
         def eliminar_del_carrito(indice):
-            """Elimina un producto del carrito según su índice."""
             if 0 <= indice < len(self.carrito):
                 eliminado = self.carrito.pop(indice)
                 print(f"Producto eliminado: {eliminado}")
@@ -593,7 +586,6 @@ class VentanaPrincipal(ctk.CTk):
         self.etiqueta_suma.configure(text=f"${total:.2f}")
 
     def completar_venta(self):
-        """Procesa la venta y muestra el modal de pago."""
         if not self.carrito:
             messagebox.showwarning("Carrito vacío", "No hay productos en el carrito.")
             return
@@ -617,10 +609,8 @@ class VentanaPrincipal(ctk.CTk):
                 if not id_cliente:
                     messagebox.showerror("Error", "Debes seleccionar o crear un cliente para generar la factura.")
                     return
-
             # Mostrar modal de pago
             pa.mostrar_modal_pago(total, id_trabajador)
-
             # Generar ticket o factura
             if generar_factura:
                 print(f"Generando factura para el cliente con ID {id_cliente}...")
@@ -628,7 +618,6 @@ class VentanaPrincipal(ctk.CTk):
             else:
                 print("Generando solo el ticket...")
                 # Aquí puedes agregar la lógica para generar solo el ticket
-
             # Limpiar el carrito después de completar la venta
             self.carrito.clear()
             self.tabla_encabezados()  # Refrescar la tabla
@@ -638,13 +627,11 @@ class VentanaPrincipal(ctk.CTk):
 
 
     def cancelar_venta(self):
-        """Cancela la venta actual y vacía el carrito."""
         if messagebox.askyesno("Cancelar venta", "¿Está seguro de que desea cancelar la venta?"):
             self.carrito.clear()
             self.tabla_encabezados()  # Refrescar la tabla
 
     def redondear_bordes(self, imagen, radio):
-        """Redondea los bordes de una imagen."""
         mascara = Image.new("L", imagen.size, 0)
         draw = ImageDraw.Draw(mascara)
         draw.rounded_rectangle(
@@ -656,7 +643,6 @@ class VentanaPrincipal(ctk.CTk):
         return imagen_redondeada
 
     def obtener_y_mostrar_productos(self):
-        """Obtiene productos de la base de datos y los muestra en el modal."""
         try:
             productos_encontrados = ve.obtener_productos()  # Obtener productos de la base de datos
             print(f"Productos encontrados: {productos_encontrados}")  # Debug
@@ -682,22 +668,8 @@ class VentanaPrincipal(ctk.CTk):
         except Exception as e:
             print(f"Error al obtener y mostrar productos: {e}")  # Debug
             messagebox.showerror("Error", f"No se pudieron cargar los productos: {str(e)}")
+        
 
-    def abrir_dashboard(self):
-        """Abre la ventana del dashboard."""
-        try:
-            # Ocultar la ventana principal
-            self.withdraw()
-            # Llamar a la función de callback para abrir el dashboard
-            if hasattr(self, 'abrir_dashboard'):
-                self.abrir_dashboard()
-            else:
-                raise Exception("No se encontró la función para abrir el dashboard")
-        except Exception as e:
-            print(f"Error al abrir el dashboard: {e}")
-            messagebox.showerror("Error", f"No se pudo abrir el dashboard: {str(e)}")
-            # Si hay error, volver a mostrar la ventana principal
-            self.deiconify()
 
 
 
