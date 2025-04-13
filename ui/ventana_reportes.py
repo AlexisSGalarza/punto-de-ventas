@@ -2,11 +2,12 @@ import customtkinter as ctk
 import tkinter as tk
 from tkinter import messagebox
 import pandas as pd
-import db.conexion as co
 from datetime import datetime
 import os
 import sys
 from PIL import Image, ImageDraw
+import app.Productos as produ
+import app.graficos as co
 
 class VentanaReportes(ctk.CTk):
     def __init__(self, abrir_dashboard, abrir_graficosr, *args, **kwargs):
@@ -68,8 +69,9 @@ class VentanaReportes(ctk.CTk):
 
         # Contenedor principal
         contenedor = ctk.CTkFrame(self, fg_color="#fcf3cf")
-        contenedor.grid(row=1, column=0, columnspan=2, sticky="nsew", padx=10, pady=10)
-        contenedor.grid_columnconfigure(0, weight=1)
+        contenedor.grid(row=1, column=0, columnspan=3, sticky="nsew", padx=10, pady=10)
+        self.grid_rowconfigure(1, weight=1)
+        self.grid_columnconfigure(0, weight=1)
 
         # Botón para generar reporte de inventario
         boton_inventario = ctk.CTkButton(
@@ -93,24 +95,129 @@ class VentanaReportes(ctk.CTk):
         )
         boton_graficos.grid(row=1, column=0, padx=10, pady=10, sticky="ew")
 
+        # Botón para generar reporte de productos con bajo stock
+        boton_bajo_stock = ctk.CTkButton(
+            contenedor,
+            text="Generar Reporte de Productos con Bajo Stock",
+            font=("Arial", 16),
+            fg_color="#58d68d",
+            text_color="white",
+            command=self.generar_reporte_bajo_stock
+        )
+        boton_bajo_stock.grid(row=2, column=0, padx=10, pady=10, sticky="ew")
+
+        # Botón para generar reporte de ventas por categoría
+        boton_ventas_categoria = ctk.CTkButton(
+            contenedor,
+            text="Generar Reporte de Ventas por Categoría",
+            font=("Arial", 16),
+            fg_color="#58d68d",
+            text_color="white",
+            command=self.generar_reporte_ventas_por_categoria
+        )
+        boton_ventas_categoria.grid(row=3, column=0, padx=10, pady=10, sticky="ew")
+
+        # Botón para generar reporte de clientes frecuentes
+        boton_clientes_frecuentes = ctk.CTkButton(
+            contenedor,
+            text="Generar Reporte de Clientes Frecuentes",
+            font=("Arial", 16),
+            fg_color="#58d68d",
+            text_color="white",
+            command=self.generar_reporte_clientes_frecuentes
+        )
+        boton_clientes_frecuentes.grid(row=4, column=0, padx=10, pady=10, sticky="ew")
+
     def generar_reporte_inventario(self):
         try:
             # Obtener productos de la base de datos
-            productos = co.obtener_productos()
-            
-            # Crear DataFrame
-            df = pd.DataFrame(productos)
-            
+            productos = produ.obtener_productos()
+
+            if not productos:
+                messagebox.showwarning("Sin datos", "No hay productos en la base de datos para generar el reporte.")
+                return
+
+            # Crear DataFrame con columnas adecuadas
+            columnas = ["ID", "Nombre", "Descripción", "Código de Barras","Codigo de Producto", "Categoría", "Precio", "Stock"]
+            df = pd.DataFrame(productos, columns=columnas)
+
             # Generar nombre del archivo con fecha y hora
             fecha_hora = datetime.now().strftime("%Y%m%d_%H%M%S")
-            nombre_archivo = f"reporte_inventario_{fecha_hora}.xlsx"
-            
+            nombre_archivo = os.path.join(os.getcwd(), f"reporte_inventario_{fecha_hora}.xlsx")
+
             # Guardar en Excel
             df.to_excel(nombre_archivo, index=False)
-            
+
             messagebox.showinfo("Éxito", f"Reporte generado: {nombre_archivo}")
         except Exception as e:
             messagebox.showerror("Error", f"Error al generar el reporte: {str(e)}")
+
+    def generar_reporte_bajo_stock(self):
+        try:
+            # Obtener productos con bajo stock
+            productos = co.obtener_productos_bajo_stock(umbral=10)  # Umbral de stock bajo
+
+            if not productos:
+                messagebox.showwarning("Sin datos", "No hay productos con bajo stock.")
+                return
+
+            # Crear DataFrame
+            columnas = ["ID", "Nombre", "Stock"]
+            df = pd.DataFrame(productos, columns=columnas)
+
+            # Guardar en Excel
+            fecha_hora = datetime.now().strftime("%Y%m%d_%H%M%S")
+            nombre_archivo = os.path.join(os.getcwd(), f"reporte_bajo_stock_{fecha_hora}.xlsx")
+            df.to_excel(nombre_archivo, index=False)
+
+            messagebox.showinfo("Éxito", f"Reporte generado: {nombre_archivo}")
+        except Exception as e:
+            messagebox.showerror("Error", f"Error al generar el reporte: {str(e)}")
+
+    def generar_reporte_ventas_por_categoria(self):
+        try:
+            # Obtener ventas por categoría
+            ventas = co.obtener_ventas_por_categoria()
+
+            if not ventas:
+                messagebox.showwarning("Sin datos", "No hay datos de ventas por categoría.")
+                return
+
+            # Crear DataFrame
+            columnas = ["Categoría", "Total Ventas"]
+            df = pd.DataFrame(ventas, columns=columnas)
+
+            # Guardar en Excel
+            fecha_hora = datetime.now().strftime("%Y%m%d_%H%M%S")
+            nombre_archivo = os.path.join(os.getcwd(), f"reporte_ventas_categoria_{fecha_hora}.xlsx")
+            df.to_excel(nombre_archivo, index=False)
+
+            messagebox.showinfo("Éxito", f"Reporte generado: {nombre_archivo}")
+        except Exception as e:
+            messagebox.showerror("Error", f"Error al generar el reporte: {str(e)}")
+
+    def generar_reporte_clientes_frecuentes(self):
+        try:
+            # Obtener clientes frecuentes
+            clientes = co.obtener_clientes_frecuentes()
+
+            if not clientes:
+                messagebox.showwarning("Sin datos", "No hay clientes frecuentes registrados.")
+                return
+
+            # Crear DataFrame
+            columnas = ["ID Cliente", "Nombre", "Compras Realizadas"]
+            df = pd.DataFrame(clientes, columns=columnas)
+
+            # Guardar en Excel
+            fecha_hora = datetime.now().strftime("%Y%m%d_%H%M%S")
+            nombre_archivo = os.path.join(os.getcwd(), f"reporte_clientes_frecuentes_{fecha_hora}.xlsx")
+            df.to_excel(nombre_archivo, index=False)
+
+            messagebox.showinfo("Éxito", f"Reporte generado: {nombre_archivo}")
+        except Exception as e:
+            messagebox.showerror("Error", f"Error al generar el reporte: {str(e)}")
+
     def redondear_bordes(self, image, radio):
         """Redondea los bordes de la imagen."""
         # Create a mask to round edges

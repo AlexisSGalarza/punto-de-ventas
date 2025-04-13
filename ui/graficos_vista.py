@@ -113,14 +113,14 @@ class ventanagraficos(ctk.CTk):
         """Crea y muestra el gráfico de productos más vendidos usando el módulo graficos."""
         data = graficos.obtener_productos_mas_vendidos()
         if data is None or data.empty:
-            print("No se pudieron obtener datos de productos más vendidos.")
+            print("[DEBUG] No se pudieron obtener datos de productos más vendidos o los datos están vacíos.")
             return
 
         fig, ax = plt.subplots(figsize=(6, 4))
-        ax.bar(data["ProductoID"], data["CantidadVendida"], color="deepskyblue")
+        ax.bar(data["Producto"], data["CantidadVendida"], color="deepskyblue")  # Cambié para usar el nombre del producto
         ax.set_title("Productos Más Vendidos", fontsize=14, fontweight="bold")
         ax.set_ylabel("Cantidad Vendida")
-        ax.set_xlabel("ID Producto")
+        ax.set_xlabel("Producto")  # Cambié para reflejar el nombre del producto
         ax.tick_params(axis="x", rotation=45)
         ax.grid(axis="y", linestyle="--", alpha=0.7)
 
@@ -135,10 +135,10 @@ class ventanagraficos(ctk.CTk):
             return
 
         fig, ax = plt.subplots(figsize=(6, 4))
-        ax.bar(data["TrabajadorID"], data["TotalVentas"], color="lightcoral")
+        ax.bar(data["Trabajador"], data["TotalVentas"], color="lightcoral")  # Cambié para usar el nombre del trabajador
         ax.set_title("Ventas por Trabajador", fontsize=14, fontweight="bold")
         ax.set_ylabel("Número de Ventas")
-        ax.set_xlabel("ID Trabajador")
+        ax.set_xlabel("Trabajador")  # Cambié para reflejar el nombre del trabajador
         ax.tick_params(axis="x", rotation=45)
         ax.grid(axis="y", linestyle="--", alpha=0.7)
 
