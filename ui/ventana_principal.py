@@ -7,7 +7,9 @@ from datetime import datetime
 import app.Productos as ve
 import tkinter.messagebox as messagebox
 import app.carrito as ca
-import app.agregar_cliente as ac
+import app.clientes as ac
+import ui.ventas as ventas
+import ticket as ti
 
 class VentanaPrincipal(ctk.CTk):
     def __init__(self,abrir_dashboard, app_state,*args, **kwargs):
@@ -594,10 +596,13 @@ class VentanaPrincipal(ctk.CTk):
             total = float(self.etiqueta_suma.cget("text").replace("$", ""))
 
             # Validar ID del trabajador
-            id_trabajador = self.app_state.get_current_user_id()  # Cambiado a get_current_user_id
+            id_trabajador = self.app_state.get_current_user_id()
             if not id_trabajador:
                 messagebox.showerror("Error", "No se ha iniciado sesión correctamente.")
                 return
+
+            # Obtener el nombre del vendedor desde el estado de la aplicación
+            nombre_vendedor = self.app_state.usuario_actual  # Asume que `usuario_actual` contiene el nombre del vendedor
 
             # Preguntar si se desea generar factura
             generar_factura = messagebox.askyesno("Generar factura", "¿Deseas generar una factura?")
@@ -609,22 +614,31 @@ class VentanaPrincipal(ctk.CTk):
                 if not id_cliente:
                     messagebox.showerror("Error", "Debes seleccionar o crear un cliente para generar la factura.")
                     return
+
+            # Crear la venta utilizando ui.ventas
+            venta_exitosa = ventas.crear_venta(id_cliente, id_trabajador, total, self.carrito)
+
+            if not venta_exitosa:
+                messagebox.showerror("Error", "No se pudo completar la venta.")
+                return
+
             # Mostrar modal de pago
-            pa.mostrar_modal_pago(total, id_trabajador)
-            # Generar ticket o factura
+            pa.mostrar_modal_pago(total, id_trabajador, self.app_state, self.carrito)
+
+            # Adjust the call to match the expected arguments
+            ca.generar_ticket(id_cliente, self.carrito, total, nombre_vendedor)
+
+            # Generar el PDF de la factura (opcional)
             if generar_factura:
-                print(f"Generando factura para el cliente con ID {id_cliente}...")
-                # Aquí puedes agregar la lógica para generar la factura
-            else:
-                print("Generando solo el ticket...")
-                # Aquí puedes agregar la lógica para generar solo el ticket
+                ca.generar_factura(id_cliente, total, id_cliente)
+
             # Limpiar el carrito después de completar la venta
             self.carrito.clear()
             self.tabla_encabezados()  # Refrescar la tabla
+
         except Exception as e:
             print(f"Error al completar la venta: {e}")
             messagebox.showerror("Error", f"Error al completar la venta: {str(e)}")
-
 
     def cancelar_venta(self):
         if messagebox.askyesno("Cancelar venta", "¿Está seguro de que desea cancelar la venta?"):
@@ -668,10 +682,53 @@ class VentanaPrincipal(ctk.CTk):
         except Exception as e:
             print(f"Error al obtener y mostrar productos: {e}")  # Debug
             messagebox.showerror("Error", f"No se pudieron cargar los productos: {str(e)}")
-        
 
+    def seleccionar_o_crear_cliente(self):
+        """Abre un modal para seleccionar o crear un cliente."""
+        modal_cliente = ctk.CTkToplevel(self)
+        modal_cliente.title("Seleccionar o Crear Cliente")
+        modal_cliente.geometry("500x400")
+        modal_cliente.grab_set()
 
+        # Título del modal
+        titulo = ctk.CTkLabel(modal_cliente, text="Seleccionar o Crear Cliente", font=("Arial", 20, "bold"))
+        titulo.pack(pady=10)
 
+        # Lista de clientes
+        lista_frame = ctk.CTkFrame(modal_cliente)
+        lista_frame.pack(fill="both", expand=True, padx=10, pady=10)
+
+        clientes = ac.obtener_clientes()  # Obtener clientes desde la base de datos
+
+        if not clientes:
+            ctk.CTkLabel(lista_frame, text="No hay clientes disponibles.", font=("Arial", 16), text_color="red").pack(pady=10)
+        else:
+            for cliente in clientes:
+                ctk.CTkButton(
+                    lista_frame,
+                    text=f"{cliente['nombre']} - {cliente['telefono']}",
+                    command=lambda c=cliente['id']: self.seleccionar_cliente(modal_cliente, c)
+                ).pack(fill="x", pady=5)
+
+        # Botón para crear un nuevo cliente
+        boton_crear = ctk.CTkButton(
+            modal_cliente,
+            text="Crear Nuevo Cliente",
+            fg_color="#58d68d",
+            text_color="white",
+            command=lambda: self.crear_cliente(modal_cliente)
+        )
+        boton_crear.pack(pady=10)
+
+    def seleccionar_cliente(self, modal, id_cliente):
+        """Selecciona un cliente y cierra el modal."""
+        self.cliente_seleccionado = id_cliente
+        modal.destroy()
+
+    def crear_cliente(self, modal):
+        """Abre el modal para crear un nuevo cliente."""
+        modal.destroy()
+        ac.abrir_modal_crear_cliente(self)
 
 if __name__ == "__main__":
     app = VentanaPrincipal()

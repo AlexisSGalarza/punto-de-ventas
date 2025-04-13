@@ -51,7 +51,7 @@ def crear_venta(id_cliente, id_trabajador, total, items):
         
         # Insertar ticket
         query_ticket = """
-        INSERT INTO ticket (ID_cl_ti, ID_tr_ti, Total_ti, Estado_ti)
+        INSERT INTO tickets  (ID_cl_ti, ID_tr_ti, Total_ti, Estado_ti)
         VALUES (%s, %s, %s, 'Completado')
         """
         cursor.execute(query_ticket, (id_cliente, id_trabajador, total))
@@ -90,12 +90,7 @@ def crear_venta(id_cliente, id_trabajador, total, items):
             conn.close()
 
 def obtener_ultimo_numero_venta():
-    """
-    Obtiene el último número de venta generado.
-    
-    Returns:
-        int: Último número de venta o 1 si hay error
-    """
+
     conn = co.obtener_conexion()
     if conn is None:
         return 1

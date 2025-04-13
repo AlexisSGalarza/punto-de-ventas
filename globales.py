@@ -24,3 +24,9 @@ class AppState:
                     print("Error: La sesión no está iniciada.")
                     return None
         return self.id_actual
+
+    def get_current_user_name(self):
+        if not self.sesion_iniciada:
+            print("Error: La sesión no está iniciada.")
+            return None
+        return self.usuario_actual
