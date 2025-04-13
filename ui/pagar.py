@@ -162,35 +162,48 @@ def mostrar_modal_pago(total, id_trabajador, app_state, carrito):
     metodo_pago.trace_add("write", actualizar_metodo_pago)
 
     def procesar_pago():
-        if metodo_pago.get() == "Efectivo":
-            try:
-                efectivo = float(efectivo_entry.get())
-                if efectivo < total_con_impuestos:
-                    messagebox.showerror("Error", "El efectivo recibido es menor al total.")
-                    return
-                cambio = efectivo - total_con_impuestos
-                messagebox.showinfo("Éxito", f"Pago completado. Cambio: ${cambio:.2f}")
+        try:
+            if metodo_pago.get() == "Efectivo":
+                try:
+                    efectivo = float(efectivo_entry.get())
+                    if efectivo < total_con_impuestos:
+                        messagebox.showerror("Error", "El efectivo recibido es menor al total.")
+                        return
+                    cambio = efectivo - total_con_impuestos
+                    messagebox.showinfo("Éxito", f"Pago completado. Cambio: ${cambio:.2f}")
+
+                    # Generar ticket con método de pago y detalles
+                    ti.generar_ticket_pdf(
+                        total_con_impuestos,
+                        "Efectivo",
+                        app_state.get_current_user_name(),
+                        carrito
+                    )
+                except ValueError:
+                    messagebox.showerror("Error", "Ingrese una cantidad válida.")
+            elif metodo_pago.get() == "Tarjeta":
+                detalles = [
+                    {
+                        "Producto": item["nombre"],
+                        "Cantidad": item["cantidad"],
+                        "Precio": f"${item['precio_unitario']:.2f}",
+                        "Subtotal": f"${item['subtotal']:.2f}"
+                    }
+                    for item in carrito
+                ]
 
                 # Generar ticket con método de pago y detalles
                 ti.generar_ticket_pdf(
                     total_con_impuestos,
-                    "Efectivo",
+                    "Tarjeta",
                     app_state.get_current_user_name(),
-                    carrito
+                    detalles
                 )
-            except ValueError:
-                messagebox.showerror("Error", "Ingrese una cantidad válida.")
-        elif metodo_pago.get() == "Tarjeta":
-            messagebox.showinfo("Éxito", "Pago completado con tarjeta.")
-
-            # Generar ticket con método de pago
-            ti.generar_ticket_pdf(
-                total_con_impuestos,
-                "Tarjeta",
-                app_state.get_current_user_name(),
-                carrito
-            )
-        modal.destroy()
+        except Exception as e:
+            print(f"Error durante el procesamiento del pago: {e}")
+        finally:
+            print("Cerrando modal...")
+            modal.destroy()
 
     # Botones
     botones_frame = ctk.CTkFrame(frame)

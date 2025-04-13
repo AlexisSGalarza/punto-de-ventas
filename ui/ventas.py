@@ -49,12 +49,15 @@ def crear_venta(id_cliente, id_trabajador, total, items):
         # Iniciar transacción
         conn.start_transaction()
         
-        # Insertar ticket
+        # Calcular total con impuestos
+        total_con_impuestos = total * 1.16
+
+        # Insertar ticket con total con impuestos
         query_ticket = """
         INSERT INTO tickets  (ID_cl_ti, ID_tr_ti, Total_ti, Estado_ti)
         VALUES (%s, %s, %s, 'Completado')
         """
-        cursor.execute(query_ticket, (id_cliente, id_trabajador, total))
+        cursor.execute(query_ticket, (id_cliente, id_trabajador, total_con_impuestos))
         id_ticket = cursor.lastrowid
         
         # Insertar detalles de venta y actualizar stock
@@ -108,4 +111,4 @@ def obtener_ultimo_numero_venta():
         if cursor:
             cursor.close()
         if conn:
-            conn.close() 
+            conn.close()

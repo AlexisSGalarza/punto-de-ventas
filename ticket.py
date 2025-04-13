@@ -9,6 +9,16 @@ def generar_ticket_pdf(total, metodo_pago, vendedor, detalles):
     print(f"Total: {total}, Método de pago: {metodo_pago}, Vendedor: {vendedor}")
     print(f"Detalles: {detalles}")
 
+    # Validar los detalles de la venta
+    if not detalles or not isinstance(detalles, list):
+        print("Error: Los detalles de la venta no son válidos o están vacíos.")
+        return
+
+    for detalle in detalles:
+        if not all(key in detalle for key in ["Producto", "Cantidad", "Precio", "Subtotal"]):
+            print(f"Error: Faltan claves en el detalle: {detalle}")
+            return
+
     # Crear directorio de tickets si no existe
     if not os.path.exists('tickets'):
         try:
@@ -31,10 +41,22 @@ def generar_ticket_pdf(total, metodo_pago, vendedor, detalles):
         # Configurar fuente y tamaño
         c.setFont("Helvetica-Bold", 16)
 
+        # Ruta del logo
+        logo_path = os.path.join(os.path.dirname(__file__), 'assets', 'logo.jpg')
+        print(f"Ruta del logo: {logo_path}")
+        if os.path.exists(logo_path):
+            try:
+                c.drawImage(logo_path, 50, height - 150, width=100, height=50)
+                print("Logo agregado correctamente al PDF.")
+            except Exception as e:
+                print(f"Error al cargar el logo: {e}")
+        else:
+            print("El archivo del logo no se encuentra en la ruta especificada.")
+
         # Encabezado
         c.drawString(50, height - 50, "TIENDA DE ABARROTES")
         c.setFont("Helvetica", 12)
-        c.drawString(50, height - 70, "Dirección: Calle Principal #123")
+        c.drawString(50, height - 70, "Dirección: Real de Cadereyta #1009 en Cadereyta Jiménez,")
         c.drawString(50, height - 85, f"Fecha: {datetime.now().strftime('%d/%m/%Y %H:%M:%S')}")
         c.drawString(50, height - 100, f"Vendedor: {vendedor}")
 
@@ -84,10 +106,16 @@ def generar_ticket_pdf(total, metodo_pago, vendedor, detalles):
         if os.path.exists(nombre_archivo):
             print(f"Archivo encontrado: {nombre_archivo}")
             try:
-                os.startfile(nombre_archivo)
+                edge_path = r"C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe"
+                if not os.path.exists(edge_path):
+                    edge_path = r"C:\Program Files\Microsoft\Edge\Application\msedge.exe"
+
+                if os.path.exists(edge_path):
+                    os.system(f'"{edge_path}" "{os.path.abspath(nombre_archivo)}"')
+                else:
+                    print("Microsoft Edge no está instalado en la ruta predeterminada.")
             except Exception as e:
-                print(f"Error al intentar abrir el archivo {nombre_archivo}: {e}")
-                print(f"El archivo se generó correctamente y está disponible en: {os.path.abspath(nombre_archivo)}")
+                print(f"Error al intentar abrir el archivo en Microsoft Edge: {e}")
         else:
             print(f"Error: El archivo {nombre_archivo} no se encuentra en el sistema.")
     except Exception as e:

@@ -9,7 +9,6 @@ import tkinter.messagebox as messagebox
 import app.carrito as ca
 import app.clientes as ac
 import ui.ventas as ventas
-import ticket as ti
 
 class VentanaPrincipal(ctk.CTk):
     def __init__(self,abrir_dashboard, app_state,*args, **kwargs):
@@ -322,11 +321,15 @@ class VentanaPrincipal(ctk.CTk):
                     self.carrito[i]["Cantidad"] += cantidad
                     self.carrito[i]["Subtotal"] = f"${float(producto['Precio']) * self.carrito[i]['Cantidad']:.2f}"
                     self.actualizar_total()  # Actualizar el total
+                    # Debug log to check the carrito when adding products
+                    print(f"Carrito después de agregar producto: {self.carrito}")
                     return True, f"Actualizado: {nuevo_producto['Producto']} (Cantidad: {self.carrito[i]['Cantidad']})"
 
             # Si no está en el carrito, agregarlo
             self.carrito.append(nuevo_producto)
             self.actualizar_total()  # Actualizar el total
+            # Debug log to check the carrito when adding products
+            print(f"Carrito después de agregar producto: {self.carrito}")
             return True, f"Agregado: {nuevo_producto['Producto']} (Cantidad: {cantidad})"
         
         except ValueError:
@@ -513,6 +516,8 @@ class VentanaPrincipal(ctk.CTk):
             if 0 <= indice < len(self.carrito):
                 eliminado = self.carrito.pop(indice)
                 print(f"Producto eliminado: {eliminado}")
+                # Debug log to check the carrito before clearing it
+                print(f"Carrito antes de limpiar: {self.carrito}")
                 actualizar_tabla_carrito()
                 self.actualizar_total()
 
@@ -625,14 +630,34 @@ class VentanaPrincipal(ctk.CTk):
             # Mostrar modal de pago
             pa.mostrar_modal_pago(total, id_trabajador, self.app_state, self.carrito)
 
-            # Adjust the call to match the expected arguments
-            ca.generar_ticket(id_cliente, self.carrito, total, nombre_vendedor)
+            # Debug log to check the state of the carrito before generating the ticket
+            print(f"Estado del carrito antes de generar el ticket: {self.carrito}")
+
+            # Transform carrito into the expected detalles format
+            detalles = [
+                {
+                    "Producto": item["Producto"],
+                    "Cantidad": item["Cantidad"],
+                    "Precio": item["Precio"],
+                    "Subtotal": item["Subtotal"]
+                }
+                for item in self.carrito
+            ]
+
+            # Debug log to check the transformed detalles before generating the ticket
+            print(f"Detalles transformados antes de generar el ticket: {detalles}")
+
+            # Debug log to track ticket generation
+            print("Llamando a ca.generar_ticket para generar el ticket principal...")
+
+            # Pass the transformed detalles to the ticket generation function
+            ca.generar_ticket(id_cliente, detalles, total, nombre_vendedor)
 
             # Generar el PDF de la factura (opcional)
             if generar_factura:
                 ca.generar_factura(id_cliente, total, id_cliente)
 
-            # Limpiar el carrito después de completar la venta
+            # Limpiar el carrito después de completar todas las operaciones
             self.carrito.clear()
             self.tabla_encabezados()  # Refrescar la tabla
 
