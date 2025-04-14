@@ -25,13 +25,21 @@ def obtener_clientes():
 
 # Función para insertar un nuevo cliente
 def insertar_cliente(cliente):
-    """Inserta un nuevo cliente en la base de datos."""
-    conn = co.obtener_conexion()  # Obtiene la conexión desde tu módulo de conexión
+    """
+    Inserta un nuevo cliente en la base de datos.
+    :param cliente: Diccionario con los datos del cliente.
+    :return: ID del cliente insertado o None si hay error.
+    """
+    conn = co.obtener_conexion()
+    if conn is None:
+        return None
+
     try:
         cursor = conn.cursor()
         query = """
         INSERT INTO clientes (
-            Nombre_cl, Apellido_cl, Correo_cl, Telefono_cl, Direccion_cl, RFC_cl, CURP_cl, Codigo_Postal_cl
+            Nombre_cl, Apellido_cl, Correo_cl, Telefono_cl, Direccion_cl, 
+            RFC_cl, CURP_cl, Codigo_Postal_cl
         )
         VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
         """
@@ -40,18 +48,27 @@ def insertar_cliente(cliente):
             cliente["direccion"], cliente["rfc"], cliente["curp"], cliente["codigo_postal"]
         )
         cursor.execute(query, values)
-        conn.commit()  # Confirmar los cambios
-        print("Cliente insertado correctamente.")
+        conn.commit()
+        
+        # Obtener el ID del cliente recién insertado
+        id_cliente = cursor.lastrowid
+        print(f"Cliente insertado correctamente con ID: {id_cliente}")
+        return id_cliente
+        
     except mysql.connector.Error as err:
         if err.errno == 1062:
             print("Error: El cliente ya existe (clave duplicada).")
         else:
             print(f"Error al insertar el cliente: {err}")
+        return None
     except Exception as e:
         print(f"Error inesperado: {e}")
+        return None
     finally:
-        cursor.close()
-        conn.close()
+        if cursor:
+            cursor.close()
+        if conn:
+            conn.close()
 
 def obtener_cliente_por_id(id_cliente):
     """Devuelve los datos de un cliente específico por su ID."""

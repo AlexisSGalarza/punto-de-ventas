@@ -6,9 +6,10 @@ from datetime import datetime
 import app.Productos as ve
 import tkinter.messagebox as messagebox
 import app.carrito as ca
-import app.clientes as ac
+import app.clientes as db
 import ui.ventas as ventas
 import tkinter as tk
+import app.agregar_cliente as ac
 
 class VentanaPrincipal(ctk.CTk):
     def __init__(self, abrir_dashboard, app_state, *args, **kwargs):
@@ -609,6 +610,14 @@ class VentanaPrincipal(ctk.CTk):
                 messagebox.showerror("Error", "No se ha iniciado sesión correctamente.")
                 return
 
+            # Preguntar si se desea generar factura
+            generar_factura = messagebox.askyesno("Generar factura", "¿Deseas generar una factura?")
+            
+            if generar_factura:
+                self.mostrar_modal_seleccion_cliente()
+                return
+            
+            # Si no se genera factura, continuar con el proceso normal
             # Mostrar modal de pago
             self.pago_exitoso = None
             self.mostrar_modal_pago(total, id_trabajador)
@@ -630,7 +639,9 @@ class VentanaPrincipal(ctk.CTk):
                         id_ticket,
                         self.carrito,
                         total,
-                        self.app_state.usuario_actual
+                        self.app_state.usuario_actual,
+                        False,  # Ticket normal
+                        None   # Sin cliente
                     )
                     
                     # Limpiar el carrito y actualizar la interfaz
@@ -693,52 +704,7 @@ class VentanaPrincipal(ctk.CTk):
             print(f"Error al obtener y mostrar productos: {e}")  # Debug
             messagebox.showerror("Error", f"No se pudieron cargar los productos: {str(e)}")
 
-    def seleccionar_o_crear_cliente(self):
-        """Abre un modal para seleccionar o crear un cliente."""
-        modal_cliente = ctk.CTkToplevel(self)
-        modal_cliente.title("Seleccionar o Crear Cliente")
-        modal_cliente.geometry("500x400")
-        modal_cliente.grab_set()
 
-        # Título del modal
-        titulo = ctk.CTkLabel(modal_cliente, text="Seleccionar o Crear Cliente", font=("Arial", 20, "bold"))
-        titulo.pack(pady=10)
-
-        # Lista de clientes
-        lista_frame = ctk.CTkFrame(modal_cliente)
-        lista_frame.pack(fill="both", expand=True, padx=10, pady=10)
-
-        clientes = ac.obtener_clientes()  # Obtener clientes desde la base de datos
-
-        if not clientes:
-            ctk.CTkLabel(lista_frame, text="No hay clientes disponibles.", font=("Arial", 16), text_color="red").pack(pady=10)
-        else:
-            for cliente in clientes:
-                ctk.CTkButton(
-                    lista_frame,
-                    text=f"{cliente['nombre']} - {cliente['telefono']}",
-                    command=lambda c=cliente['id']: self.seleccionar_cliente(modal_cliente, c)
-                ).pack(fill="x", pady=5)
-
-        # Botón para crear un nuevo cliente
-        boton_crear = ctk.CTkButton(
-            modal_cliente,
-            text="Crear Nuevo Cliente",
-            fg_color="#58d68d",
-            text_color="white",
-            command=lambda: self.crear_cliente(modal_cliente)
-        )
-        boton_crear.pack(pady=10)
-
-    def seleccionar_cliente(self, modal, id_cliente):
-        """Selecciona un cliente y cierra el modal."""
-        self.cliente_seleccionado = id_cliente
-        modal.destroy()
-
-    def crear_cliente(self, modal):
-        """Abre el modal para crear un nuevo cliente."""
-        modal.destroy()
-        ac.abrir_modal_crear_cliente(self)
 
 
     def mostrar_modal_pago(self, total, id_trabajador):
@@ -880,6 +846,199 @@ class VentanaPrincipal(ctk.CTk):
         """Finaliza el flujo del pago y devuelve el resultado."""
         self.pago_exitoso = resultado
         self._pago_completado.set(True)  # Indica que el pago ha sido procesado
+
+    def mostrar_modal_seleccion_cliente(self):
+        """Muestra un modal para seleccionar o crear un cliente para la factura."""
+        # Crear ventana modal
+        modal = ctk.CTkToplevel(self)
+        modal.title("Seleccionar Cliente para Factura")
+        modal.geometry("800x600")
+        modal.resizable(False, False)
+        modal.grab_set()
+
+        # Frame principal
+        frame = ctk.CTkFrame(modal, fg_color="#fcf3cf")
+        frame.pack(fill="both", expand=True, padx=20, pady=20)
+
+        # Título
+        titulo = ctk.CTkLabel(
+            frame,
+            text="Seleccionar Cliente para Factura",
+            font=("Arial", 24, "bold"),
+            text_color="black"
+        )
+        titulo.pack(pady=10)
+
+        # Frame de búsqueda con botón de cerrar
+        search_frame = ctk.CTkFrame(frame, fg_color="#f4d03f")
+        search_frame.pack(fill="x", padx=10, pady=5)
+
+        # Entrada de búsqueda
+        search_entry = ctk.CTkEntry(
+            search_frame,
+            placeholder_text="🔍 Buscar cliente...",
+            width=300,
+            height=35,
+            fg_color="white",
+            text_color="black"
+        )
+        search_entry.pack(side="left", padx=10, pady=5, expand=True)
+
+        # Frame para la lista de clientes
+        list_frame = ctk.CTkScrollableFrame(frame, fg_color="white")
+        list_frame.pack(fill="both", expand=True, padx=10, pady=10)
+
+        def actualizar_lista_clientes(busqueda=""):
+            # Limpiar lista actual
+            for widget in list_frame.winfo_children():
+                widget.destroy()
+
+            # Obtener clientes
+            clientes = db.obtener_clientes()
+            if not clientes:
+                ctk.CTkLabel(
+                    list_frame,
+                    text="No hay clientes registrados",
+                    font=("Arial", 14),
+                    text_color="red"
+                ).pack(pady=20)
+                return
+
+            # Filtrar clientes si hay búsqueda
+            if busqueda:
+                busqueda = busqueda.lower()
+                clientes = [c for c in clientes if 
+                          busqueda in str(c[1]).lower() or  # Nombre
+                          busqueda in str(c[2]).lower() or  # Apellido
+                          busqueda in str(c[4]).lower()]    # Teléfono
+
+            # Mostrar clientes filtrados
+            for cliente in clientes:
+                cliente_frame = ctk.CTkFrame(list_frame, fg_color="#fcf3cf")
+                cliente_frame.pack(fill="x", padx=5, pady=2)
+                
+                # Información del cliente
+                info = f"{cliente[1]} {cliente[2]} - {cliente[4]}"  # Nombre, Apellido, Teléfono
+                ctk.CTkLabel(
+                    cliente_frame,
+                    text=info,
+                    font=("Arial", 14),
+                    text_color="black"
+                ).pack(side="left", padx=10, pady=5)
+
+                # Botón seleccionar
+                ctk.CTkButton(
+                    cliente_frame,
+                    text="Seleccionar",
+                    font=("Arial", 12),
+                    fg_color="#28a745",
+                    text_color="white",
+                    width=100,
+                    command=lambda c=cliente[0]: self.seleccionar_cliente_factura(modal, c)
+                ).pack(side="right", padx=10, pady=5)
+
+        # Botón de búsqueda
+        ctk.CTkButton(
+            search_frame,
+            text="Buscar",
+            fg_color="#28a745",
+            text_color="white",
+            command=lambda: actualizar_lista_clientes(search_entry.get())
+        ).pack(side="right", padx=10, pady=5)
+
+        # Botón cerrar
+        ctk.CTkButton(
+            search_frame,
+            text="✖ Cerrar",
+            fg_color="#e74c3c",
+            text_color="white",
+            command=modal.destroy
+        ).pack(side="right", padx=10, pady=5)
+
+        # Vincular la tecla Enter a la búsqueda
+        search_entry.bind("<Return>", lambda e: actualizar_lista_clientes(search_entry.get()))
+
+        # Botón para crear nuevo cliente
+        ctk.CTkButton(
+            frame,
+            text="+ Crear Nuevo Cliente",
+            font=("Arial", 14, "bold"),
+            fg_color="#3498db",
+            text_color="white",
+            command=lambda: self.crear_cliente_factura(modal)
+        ).pack(pady=10)
+
+        # Cargar lista inicial de clientes
+        actualizar_lista_clientes()
+
+    def seleccionar_cliente_factura(self, modal, id_cliente):
+        """Callback cuando se selecciona un cliente para factura."""
+        self.cliente_factura = id_cliente
+        modal.destroy()
+        # Continuar con el proceso de facturación
+        self.procesar_venta_con_factura()
+
+    def crear_cliente_factura(self, modal):
+        """Abre el modal para crear un nuevo cliente desde la facturación."""
+        modal.destroy()
+        ac.abrir_modal_crear_cliente(on_close_callback=lambda: self.mostrar_modal_seleccion_cliente())
+
+    def procesar_venta_con_factura(self):
+        """Procesa la venta con factura después de seleccionar o crear el cliente."""
+        if hasattr(self, 'cliente_factura') and self.cliente_factura:
+            try:
+                total = float(self.etiqueta_suma.cget("text").replace("$", ""))
+                id_trabajador = self.app_state.get_current_user_id()
+                
+                # Mostrar modal de pago
+                self.pago_exitoso = None
+                self.mostrar_modal_pago(total, id_trabajador)
+                
+                # Esperar a que se complete el pago
+                self.wait_variable(self._pago_completado)
+                
+                if self.pago_exitoso:
+                    try:
+                        # Guardar el ticket con el ID del cliente
+                        id_ticket = ca.guardar_ticket(id_trabajador, self.cliente_factura, total, self.carrito)
+                        
+                        if id_ticket is None:
+                            raise Exception("No se pudo obtener el ID del ticket")
+                        
+                        # Generar el ticket normal
+                        ca.generar_ticket(
+                            id_ticket,
+                            self.carrito,
+                            total,
+                            self.app_state.usuario_actual,
+                            False  # Ticket normal
+                        )
+                        
+                        # Generar la factura con el ID del cliente
+                        ca.generar_ticket(
+                            id_ticket,
+                            self.carrito,
+                            total,
+                            self.app_state.usuario_actual,
+                            True,  # Factura
+                            self.cliente_factura  # Pasar el ID del cliente
+                        )
+                        
+                        # Limpiar el carrito y actualizar la interfaz
+                        self.carrito.clear()
+                        self.tabla_encabezados()
+                        messagebox.showinfo("Venta completada", f"La venta con factura se ha completado exitosamente.\nTicket #: {id_ticket}")
+                    except Exception as e:
+                        print(f"Error al generar la factura: {e}")
+                        messagebox.showerror("Error", f"Error al generar la factura: {str(e)}")
+                else:
+                    messagebox.showinfo("Venta cancelada", "La venta ha sido cancelada.")
+            except Exception as e:
+                print(f"Error durante la venta con factura: {e}")
+                messagebox.showerror("Error", f"Error durante la venta con factura: {str(e)}")
+        else:
+            messagebox.showwarning("Error", "No se ha seleccionado un cliente para la factura.")
+            self.mostrar_modal_seleccion_cliente()
 
 if __name__ == "__main__":
     app = VentanaPrincipal()

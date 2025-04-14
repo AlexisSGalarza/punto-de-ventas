@@ -22,111 +22,140 @@ class VentanaReportes(ctk.CTk):
 
     def crear_ui(self):
         """Crea la interfaz de usuario."""
-        # Crear encabezado
         self.crear_encabezado()
+        self.crear_panel_principal()
 
-        # Configurar el cierre de la ventana
-    
     def crear_encabezado(self):
         """Crea el encabezado principal."""
-        encabezado = ctk.CTkFrame(self, fg_color="#f4d03f", height=100)
-        encabezado.grid(row=0, column=0, columnspan=3, sticky="ew", padx=10, pady=10)
-
-        franja_roja = ctk.CTkFrame(encabezado, fg_color="#f11919", height=20)
-        franja_roja.grid(row=1, column=0, columnspan=3, sticky="ew")
-
-        encabezado.grid_columnconfigure(0, weight=1)
-        encabezado.grid_columnconfigure(1, weight=1)
-        encabezado.grid_columnconfigure(2, weight=1)
-
-        # Logo
-        logo_imagen = Image.open("assets/logo.jpg")
-        logo_imagen_redondeada = self.redondear_bordes(logo_imagen, radio=75)
-        logo_imagen_ctk = ctk.CTkImage(logo_imagen_redondeada, size=(100, 100))
-
-        logo = ctk.CTkLabel(encabezado, image=logo_imagen_ctk, text="")
-        logo.grid(row=0, column=0, padx=10, pady=10, sticky="w")
-
-        # Texto del encabezado
-        texto_encabezado = ctk.CTkLabel(
-            encabezado,
-            text="Gestionar Trabajadores",
-            font=("Arial", 50, "bold"),
+        # Crear frame para el encabezado
+        frame_encabezado = ctk.CTkFrame(self, fg_color="#f4d03f", height=100)
+        frame_encabezado.grid(row=0, column=0, columnspan=3, sticky="ew")
+        
+        # Título de la ventana
+        titulo = ctk.CTkLabel(
+            frame_encabezado,
+            text="Reportes y Análisis",
+            font=("Arial", 24, "bold"),
             text_color="black"
         )
-        texto_encabezado.grid(row=0, column=1, padx=10, pady=10, sticky="ew")
+        titulo.grid(row=0, column=1, padx=20, pady=20)
 
         # Botón para regresar al dashboard
         boton_regresar = ctk.CTkButton(
-            encabezado,
+            frame_encabezado,
             text="Regresar al Dashboard",
-            font=("Arial", 16, "bold"),
-            fg_color="#58d68d",
+            font=("Arial", 16),
+            fg_color="#f11919",
             text_color="white",
+            hover_color="#d91717",
             command=self.abrir_dashboard
         )
-        boton_regresar.grid(row=0, column=1, padx=10, pady=10, sticky="e")
+        boton_regresar.grid(row=0, column=0, padx=20, pady=20, sticky="w")
 
-        # Contenedor principal
-        contenedor = ctk.CTkFrame(self, fg_color="#fcf3cf")
-        contenedor.grid(row=1, column=0, columnspan=3, sticky="nsew", padx=10, pady=10)
+        # Configurar el peso de las columnas
+        frame_encabezado.grid_columnconfigure(1, weight=1)
+
+    def crear_panel_principal(self):
+        """Crea el panel principal con diseño moderno de tarjetas."""
+        # Contenedor principal con fondo claro
+        contenedor = ctk.CTkFrame(self, fg_color="#ffffff", corner_radius=15)
+        contenedor.grid(row=1, column=0, columnspan=3, sticky="nsew", padx=20, pady=20)
         self.grid_rowconfigure(1, weight=1)
         self.grid_columnconfigure(0, weight=1)
 
-        # Botón para generar reporte de inventario
-        boton_inventario = ctk.CTkButton(
-            contenedor,
-            text="Generar Reporte de Inventario",
-            font=("Arial", 16),
-            fg_color="#58d68d",
-            text_color="white",
-            command=self.generar_reporte_inventario
+        # Grid de 2x2 para las tarjetas de reportes
+        contenedor.grid_columnconfigure((0,1), weight=1)
+        contenedor.grid_rowconfigure((0,1), weight=1)
+
+        # Tarjeta 1: Reporte de Inventario
+        self.crear_tarjeta_reporte(
+            contenedor, 0, 0,
+            "Reporte de Inventario",
+            "Genera un informe detallado del inventario actual",
+            "📦",
+            self.generar_reporte_inventario
         )
-        boton_inventario.grid(row=0, column=0, padx=10, pady=10, sticky="ew")
+
+        # Tarjeta 2: Productos con Bajo Stock
+        self.crear_tarjeta_reporte(
+            contenedor, 0, 1,
+            "Productos con Bajo Stock",
+            "Identifica productos que necesitan reabastecimiento",
+            "⚠️",
+            self.generar_reporte_bajo_stock
+        )
+
+        # Tarjeta 3: Ventas por Categoría
+        self.crear_tarjeta_reporte(
+            contenedor, 1, 0,
+            "Ventas por Categoría",
+            "Analiza el rendimiento por categoría de productos",
+            "📊",
+            self.generar_reporte_ventas_por_categoria
+        )
+
+        # Tarjeta 4: Clientes Frecuentes
+        self.crear_tarjeta_reporte(
+            contenedor, 1, 1,
+            "Clientes Frecuentes",
+            "Identifica y analiza los clientes más leales",
+            "👥",
+            self.generar_reporte_clientes_frecuentes
+        )
 
         # Botón para ver gráficos
         boton_graficos = ctk.CTkButton(
             contenedor,
-            text="Ver Gráficos",
-            font=("Arial", 16),
-            fg_color="#58d68d",
-            text_color="white",
+            text="Ver Gráficos Detallados 📈",
+            font=("Helvetica", 16, "bold"),
+            fg_color="#f4d03f",
+            hover_color="#e6c430",
+            height=40,
+            corner_radius=10,
             command=self.abrir_graficos
         )
-        boton_graficos.grid(row=1, column=0, padx=10, pady=10, sticky="ew")
+        boton_graficos.grid(row=2, column=0, columnspan=2, padx=20, pady=20, sticky="ew")
 
-        # Botón para generar reporte de productos con bajo stock
-        boton_bajo_stock = ctk.CTkButton(
-            contenedor,
-            text="Generar Reporte de Productos con Bajo Stock",
-            font=("Arial", 16),
-            fg_color="#58d68d",
-            text_color="white",
-            command=self.generar_reporte_bajo_stock
-        )
-        boton_bajo_stock.grid(row=2, column=0, padx=10, pady=10, sticky="ew")
-
-        # Botón para generar reporte de ventas por categoría
-        boton_ventas_categoria = ctk.CTkButton(
-            contenedor,
-            text="Generar Reporte de Ventas por Categoría",
-            font=("Arial", 16),
-            fg_color="#58d68d",
-            text_color="white",
-            command=self.generar_reporte_ventas_por_categoria
-        )
-        boton_ventas_categoria.grid(row=3, column=0, padx=10, pady=10, sticky="ew")
-
-        # Botón para generar reporte de clientes frecuentes
-        boton_clientes_frecuentes = ctk.CTkButton(
-            contenedor,
-            text="Generar Reporte de Clientes Frecuentes",
-            font=("Arial", 16),
-            fg_color="#58d68d",
-            text_color="white",
-            command=self.generar_reporte_clientes_frecuentes
-        )
-        boton_clientes_frecuentes.grid(row=4, column=0, padx=10, pady=10, sticky="ew")
+    def crear_tarjeta_reporte(self, parent, row, col, titulo, descripcion, emoji, comando):
+        """Crea una tarjeta de reporte con diseño moderno."""
+        frame = ctk.CTkFrame(parent, fg_color="#fcf3cf", corner_radius=10)
+        frame.grid(row=row, column=col, padx=15, pady=15, sticky="nsew")
+        
+        # Emoji grande
+        ctk.CTkLabel(
+            frame,
+            text=emoji,
+            font=("Helvetica", 48)
+        ).grid(row=0, column=0, pady=(20,10))
+        
+        # Título
+        ctk.CTkLabel(
+            frame,
+            text=titulo,
+            font=("Helvetica", 20, "bold"),
+            text_color="black"
+        ).grid(row=1, column=0, pady=(0,10))
+        
+        # Descripción
+        ctk.CTkLabel(
+            frame,
+            text=descripcion,
+            font=("Helvetica", 14),
+            text_color="#333333",
+            wraplength=250
+        ).grid(row=2, column=0, pady=(0,20))
+        
+        # Botón
+        ctk.CTkButton(
+            frame,
+            text="Generar Reporte",
+            font=("Helvetica", 14),
+            fg_color="#f11919",
+            hover_color="#d91717",
+            height=35,
+            corner_radius=8,
+            command=comando
+        ).grid(row=3, column=0, pady=(0,20))
 
     def generar_reporte_inventario(self):
         try:

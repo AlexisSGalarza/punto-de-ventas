@@ -80,7 +80,7 @@ def agregar_cliente(on_close_callback=None):
 
         # Guardar en la base de datos
         try:
-            db.insertar_cliente(nuevo_cliente)  # Asegúrate de que esta función esté definida en tu archivo de base de datos
+            id_cliente = db.insertar_cliente(nuevo_cliente)  # Esta función debe devolver el ID del cliente insertado
             messagebox.showinfo("Éxito", "Cliente guardado correctamente.")
             if on_close_callback:
                 on_close_callback()  # Notificar a la ventana principal para actualizar la tabla
@@ -104,5 +104,11 @@ def agregar_cliente(on_close_callback=None):
 
     root.mainloop()
 
+def abrir_modal_crear_cliente(parent=None, on_close_callback=None):
+    """
+    Abre un modal para crear un nuevo cliente.
+    Esta función está diseñada específicamente para ser llamada desde otras ventanas.
+    """
+    agregar_cliente(on_close_callback)
 
-    
+
