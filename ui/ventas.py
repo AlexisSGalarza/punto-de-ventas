@@ -41,7 +41,7 @@ def obtener_productos(busqueda=None):
 def crear_venta(id_cliente, id_trabajador, total, items):
     conn = co.obtener_conexion()
     if conn is None:
-        return False
+        return None
     
     try:
         cursor = conn.cursor()
@@ -62,12 +62,16 @@ def crear_venta(id_cliente, id_trabajador, total, items):
         
         # Insertar detalles de venta y actualizar stock
         for item in items:
-            # Insertar detalle de venta
+            # Obtener el precio unitario del producto (quitando el símbolo $)
+            precio_unitario = float(item['Precio'].replace('$', ''))
+            subtotal = precio_unitario * item['Cantidad']
+
+            # Insertar detalle de venta con precio unitario y subtotal
             query_detalle = """
-            INSERT INTO detalles_venta (ID_ti_dv, ID_pr_dv, Cantidad_dv)
-            VALUES (%s, %s, %s)
+            INSERT INTO detalles_venta (ID_ti_dv, ID_pr_dv, Cantidad_dv, Precio_Unitario_dv, Subtotal_dv)
+            VALUES (%s, %s, %s, %s, %s)
             """
-            cursor.execute(query_detalle, (id_ticket, item['No.'], item['Cantidad']))
+            cursor.execute(query_detalle, (id_ticket, item['No.'], item['Cantidad'], precio_unitario, subtotal))
             
             # Actualizar stock
             query_stock = """
@@ -79,13 +83,13 @@ def crear_venta(id_cliente, id_trabajador, total, items):
         
         # Confirmar transacción
         conn.commit()
-        return True
+        return id_ticket  # Devolver el ID del ticket creado
         
     except Exception as e:
         # Revertir cambios en caso de error
         conn.rollback()
         print(f"Error al crear venta: {e}")
-        return False
+        return None
     finally:
         if cursor:
             cursor.close()
@@ -93,20 +97,20 @@ def crear_venta(id_cliente, id_trabajador, total, items):
             conn.close()
 
 def obtener_ultimo_numero_venta():
-
+    """Obtiene el ID del último ticket insertado."""
     conn = co.obtener_conexion()
     if conn is None:
-        return 1
+        return None
     
     try:
         cursor = conn.cursor()
-        query = "SELECT MAX(ID_ti) FROM ticket"
+        query = "SELECT ID_ti FROM tickets ORDER BY ID_ti DESC LIMIT 1"
         cursor.execute(query)
         resultado = cursor.fetchone()
-        return resultado[0] + 1 if resultado[0] else 1
+        return resultado[0] if resultado else None
     except Exception as e:
         print(f"Error al obtener último número de venta: {e}")
-        return 1
+        return None
     finally:
         if cursor:
             cursor.close()

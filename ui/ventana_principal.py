@@ -1,7 +1,6 @@
 import customtkinter as ctk
 from PIL import Image, ImageDraw
 from tkinter import Scrollbar
-import ui.pagar as pa
 import os
 from datetime import datetime
 import app.Productos as ve
@@ -9,9 +8,10 @@ import tkinter.messagebox as messagebox
 import app.carrito as ca
 import app.clientes as ac
 import ui.ventas as ventas
+import tkinter as tk
 
 class VentanaPrincipal(ctk.CTk):
-    def __init__(self,abrir_dashboard, app_state,*args, **kwargs):
+    def __init__(self, abrir_dashboard, app_state, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.abrir_dashboard = abrir_dashboard
         self.app_state = app_state
@@ -20,7 +20,9 @@ class VentanaPrincipal(ctk.CTk):
         self.configure(fg_color="#fcf3cf")
         self.attributes("-fullscreen", True)
         self.carrito = []
-        self.crear_ui() 
+        self._pago_completado = tk.BooleanVar(value=False)
+        self.pago_exitoso = None
+        self.crear_ui()
 
     def crear_ui(self):
             """Crea toda la interfaz visual de la ventana principal."""
@@ -593,82 +595,65 @@ class VentanaPrincipal(ctk.CTk):
         self.etiqueta_suma.configure(text=f"${total:.2f}")
 
     def completar_venta(self):
+        """Procesa la venta y muestra el modal de pago."""
         if not self.carrito:
             messagebox.showwarning("Carrito vacío", "No hay productos en el carrito.")
             return
 
         try:
             total = float(self.etiqueta_suma.cget("text").replace("$", ""))
-
+            
             # Validar ID del trabajador
             id_trabajador = self.app_state.get_current_user_id()
             if not id_trabajador:
                 messagebox.showerror("Error", "No se ha iniciado sesión correctamente.")
                 return
 
-            # Obtener el nombre del vendedor desde el estado de la aplicación
-            nombre_vendedor = self.app_state.usuario_actual  # Asume que `usuario_actual` contiene el nombre del vendedor
-
-            # Preguntar si se desea generar factura
-            generar_factura = messagebox.askyesno("Generar factura", "¿Deseas generar una factura?")
-            id_cliente = None
-
-            if generar_factura:
-                # Abrir modal para seleccionar o crear cliente
-                id_cliente = self.seleccionar_o_crear_cliente()
-                if not id_cliente:
-                    messagebox.showerror("Error", "Debes seleccionar o crear un cliente para generar la factura.")
-                    return
-
-            # Crear la venta utilizando ui.ventas
-            venta_exitosa = ventas.crear_venta(id_cliente, id_trabajador, total, self.carrito)
-
-            if not venta_exitosa:
-                messagebox.showerror("Error", "No se pudo completar la venta.")
-                return
-
             # Mostrar modal de pago
-            pa.mostrar_modal_pago(total, id_trabajador, self.app_state, self.carrito)
-
-            # Debug log to check the state of the carrito before generating the ticket
-            print(f"Estado del carrito antes de generar el ticket: {self.carrito}")
-
-            # Transform carrito into the expected detalles format
-            detalles = [
-                {
-                    "Producto": item["Producto"],
-                    "Cantidad": item["Cantidad"],
-                    "Precio": item["Precio"],
-                    "Subtotal": item["Subtotal"]
-                }
-                for item in self.carrito
-            ]
-
-            # Debug log to check the transformed detalles before generating the ticket
-            print(f"Detalles transformados antes de generar el ticket: {detalles}")
-
-            # Debug log to track ticket generation
-            print("Llamando a ca.generar_ticket para generar el ticket principal...")
-
-            # Pass the transformed detalles to the ticket generation function
-            ca.generar_ticket(id_cliente, detalles, total, nombre_vendedor)
-
-            # Generar el PDF de la factura (opcional)
-            if generar_factura:
-                ca.generar_factura(id_cliente, total, id_cliente)
-
-            # Limpiar el carrito después de completar todas las operaciones
-            self.carrito.clear()
-            self.tabla_encabezados()  # Refrescar la tabla
+            self.pago_exitoso = None
+            self.mostrar_modal_pago(total, id_trabajador)
+            
+            # Esperar a que se complete el pago
+            self.wait_variable(self._pago_completado)
+            
+            if self.pago_exitoso:
+                try:
+                    # Guardar el ticket en la base de datos y obtener su ID
+                    id_ticket = ca.guardar_ticket(id_trabajador, None, total, self.carrito)
+                    
+                    # Asegurarse de que tenemos un ID válido
+                    if id_ticket is None:
+                        raise Exception("No se pudo obtener el ID del ticket")
+                    
+                    # Generar el ticket PDF con el ID correcto
+                    ca.generar_ticket(
+                        id_ticket,
+                        self.carrito,
+                        total,
+                        self.app_state.usuario_actual
+                    )
+                    
+                    # Limpiar el carrito y actualizar la interfaz
+                    self.carrito.clear()
+                    self.tabla_encabezados()
+                    messagebox.showinfo("Venta completada", f"La venta se ha completado exitosamente.\nTicket #: {id_ticket}")
+                except Exception as e:
+                    print(f"Error al generar el ticket: {e}")
+                    messagebox.showerror("Error", f"Error al generar el ticket: {str(e)}")
+            else:
+                print("Venta cancelada o pago no completado")
+                messagebox.showinfo("Venta cancelada", "La venta ha sido cancelada.")
 
         except Exception as e:
-            print(f"Error al completar la venta: {e}")
-            messagebox.showerror("Error", f"Error al completar la venta: {str(e)}")
+            print(f"Error durante la venta: {e}")
+            messagebox.showerror("Error", f"Error durante la venta: {str(e)}")
 
     def cancelar_venta(self):
+        """Cancela la venta actual, vacía el carrito y refresca la tabla."""
         if messagebox.askyesno("Cancelar venta", "¿Está seguro de que desea cancelar la venta?"):
-            self.carrito.clear()
+            self.carrito.clear()  # Vaciar el carrito
             self.tabla_encabezados()  # Refrescar la tabla
+            messagebox.showinfo("Venta cancelada", "La venta ha sido cancelada correctamente.")
 
     def redondear_bordes(self, imagen, radio):
         mascara = Image.new("L", imagen.size, 0)
@@ -754,6 +739,147 @@ class VentanaPrincipal(ctk.CTk):
         """Abre el modal para crear un nuevo cliente."""
         modal.destroy()
         ac.abrir_modal_crear_cliente(self)
+
+
+    def mostrar_modal_pago(self, total, id_trabajador):
+        # Calcular impuestos y total con impuestos
+        impuesto = total * 0.16
+        total_con_impuestos = total + impuesto
+
+        # Crear ventana modal
+        modal = ctk.CTkToplevel(self)
+        modal.title("Procesar Pago")
+        modal.geometry("400x500")
+        modal.resizable(False, False)
+        modal.grab_set()  # Hacer modal
+
+        # Frame principal
+        frame = ctk.CTkFrame(modal)
+        frame.pack(padx=20, pady=20, fill="both", expand=True)
+
+        # Título
+        ctk.CTkLabel(
+            frame,
+            text="Detalles del Pago",
+            font=("Arial", 20, "bold")
+        ).pack(pady=10)
+
+        # Desglose de pago
+        desglose_frame = ctk.CTkFrame(frame)
+        desglose_frame.pack(padx=10, pady=10, fill="x")
+
+        # Subtotal
+        ctk.CTkLabel(
+            desglose_frame,
+            text=f"Subtotal: ${total:.2f}",
+            font=("Arial", 16)
+        ).pack(anchor="w", padx=10, pady=5)
+
+        # Impuesto
+        ctk.CTkLabel(
+            desglose_frame,
+            text=f"IVA (16%): ${impuesto:.2f}",
+            font=("Arial", 16)
+        ).pack(anchor="w", padx=10, pady=5)
+
+        # Total
+        ctk.CTkLabel(
+            desglose_frame,
+            text=f"Total: ${total_con_impuestos:.2f}",
+            font=("Arial", 18, "bold")
+        ).pack(anchor="w", padx=10, pady=5)
+
+        # Método de pago
+        ctk.CTkLabel(
+            frame,
+            text="Seleccione método de pago:",
+            font=("Arial", 16)
+        ).pack(pady=10)
+
+        # Variable para método de pago
+        metodo_pago = tk.StringVar(value="Efectivo")
+
+        # Radio buttons para métodos de pago
+        ctk.CTkRadioButton(
+            frame,
+            text="Efectivo",
+            variable=metodo_pago,
+            value="Efectivo",
+            font=("Arial", 14)
+        ).pack(pady=5)
+
+        ctk.CTkRadioButton(
+            frame,
+            text="Tarjeta",
+            variable=metodo_pago,
+            value="Tarjeta",
+            font=("Arial", 14)
+        ).pack(pady=5)
+
+        # Entrada de efectivo
+        efectivo_entry = ctk.CTkEntry(frame, font=("Arial", 14), placeholder_text="Ingrese efectivo recibido")
+
+        def toggle_efectivo(show):
+            if show:
+                efectivo_entry.pack(pady=10, fill="x", padx=20)
+            else:
+                efectivo_entry.pack_forget()
+
+        # Mostrar entrada de efectivo inicialmente si el método es efectivo
+        toggle_efectivo(metodo_pago.get() == "Efectivo")
+
+        def actualizar_metodo_pago(*args):
+            toggle_efectivo(metodo_pago.get() == "Efectivo")
+
+        metodo_pago.trace_add("write", actualizar_metodo_pago)
+
+        def procesar_pago():
+            try:
+                if metodo_pago.get() == "Efectivo":
+                    try:
+                        efectivo = float(efectivo_entry.get())
+                        if efectivo < total_con_impuestos:
+                            messagebox.showerror("Error", "El efectivo recibido es menor al total.")
+                            return False
+                        cambio = efectivo - total_con_impuestos
+                        messagebox.showinfo("Éxito", f"Pago completado. Cambio: ${cambio:.2f}")
+                    except ValueError:
+                        messagebox.showerror("Error", "Ingrese una cantidad válida.")
+                        return False
+                elif metodo_pago.get() == "Tarjeta":
+                    messagebox.showinfo("Éxito", "Pago completado con tarjeta.")
+
+                # Cerrar el modal después de procesar el pago
+                modal.destroy()
+                return True
+            except Exception as e:
+                print(f"Error durante el procesamiento del pago: {e}")
+                return False
+
+        # Botones
+        botones_frame = ctk.CTkFrame(frame)
+        botones_frame.pack(pady=20, fill="x", padx=20)
+
+        ctk.CTkButton(
+            botones_frame,
+            text="Procesar Pago",
+            command=lambda: self.finalizar_pago(procesar_pago()),
+            font=("Arial", 16, "bold"),
+            fg_color="#28a745"
+        ).pack(side="left", padx=5, expand=True, fill="x")
+
+        ctk.CTkButton(
+            botones_frame,
+            text="Cancelar",
+            command=lambda: self.finalizar_pago(False),
+            font=("Arial", 16, "bold"),
+            fg_color="#dc3545"
+        ).pack(side="left", padx=5, expand=True, fill="x")
+
+    def finalizar_pago(self, resultado):
+        """Finaliza el flujo del pago y devuelve el resultado."""
+        self.pago_exitoso = resultado
+        self._pago_completado.set(True)  # Indica que el pago ha sido procesado
 
 if __name__ == "__main__":
     app = VentanaPrincipal()

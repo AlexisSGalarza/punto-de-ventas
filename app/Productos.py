@@ -1,15 +1,22 @@
 import db.conexion as co
 import mysql.connector 
 
-def obtener_productos():
+def obtener_productos(texto_busqueda=None):
     try:
         conn = co.obtener_conexion()
         if conn is not None:
             cursor = conn.cursor()
-            query = """
-            SELECT ID_pr, Nombre_pr, Descripcion_pr, codigo_barras_pr, codigo_producto_pr, Categoria_pr, Precio_pr,Stock_pr
-            FROM productos;
-            """
+            if texto_busqueda:
+                query = f"""
+                SELECT ID_pr, Nombre_pr, Descripcion_pr, codigo_barras_pr, codigo_producto_pr, Categoria_pr, Precio_pr, Stock_pr
+                FROM productos
+                WHERE Nombre_pr LIKE '%{texto_busqueda}%' OR codigo_barras_pr LIKE '%{texto_busqueda}%';
+                """
+            else:
+                query = """
+                SELECT ID_pr, Nombre_pr, Descripcion_pr, codigo_barras_pr, codigo_producto_pr, Categoria_pr, Precio_pr, Stock_pr
+                FROM productos;
+                """
 
             cursor.execute(query)
             productos = cursor.fetchall()

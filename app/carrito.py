@@ -7,6 +7,7 @@ from reportlab.lib.pagesizes import letter
 from reportlab.lib import colors
 from datetime import datetime
 import os
+import ui.ventas as ventas  # Importando el módulo ventas
 
 class CarritoCompras:
     def __init__(self):
@@ -71,48 +72,47 @@ class CarritoCompras:
         self.total = 0.0
 
 def guardar_ticket(id_trabajador, id_cliente, total, carrito):
-    """Guarda el ticket y los detalles de la venta en la base de datos."""
+    """
+    Guarda la venta y sus detalles en la base de datos.
+    Args:
+        id_trabajador: ID del trabajador que realiza la venta
+        id_cliente: ID del cliente (puede ser None)
+        total: Total de la venta
+        carrito: Lista de productos en el carrito
+    Returns:
+        id_venta: ID de la venta generada
+    """
     try:
-        conexion = obtener_conexion()
-        cursor = conexion.cursor()
-
-        # Insertar en la tabla tickets
-        query_ticket = """
-            INSERT INTO tickets (ID_cl, ID_tr, Fecha_Hora_ti, Total_ti)
-            VALUES (%s, %s, NOW(), %s)
-        """
-        valores_ticket = (id_cliente, id_trabajador, total)
-        cursor.execute(query_ticket, valores_ticket)
-        id_ticket = cursor.lastrowid  # Obtener el ID del ticket generado
-
-        # Insertar en la tabla detalles_venta
+        # Formatear los items del carrito para mantener los precios unitarios y subtotales
+        items_formateados = []
         for producto in carrito:
-            query_detalle = """
-                INSERT INTO detalles_venta (ID_ti, ID_pr, Cantidad_dv, Precio_Unitario_dv, Subtotal_dv)
-                VALUES (%s, %s, %s, %s, %s)
-            """
-            valores_detalle = (
-                id_ticket,
-                producto["No."],
-                producto["Cantidad"],
-                float(producto["Precio"].replace("$", "")),
-                float(producto["Subtotal"].replace("$", ""))
-            )
-            cursor.execute(query_detalle, valores_detalle)
+            precio_unitario = float(producto["Precio"].replace("$", ""))
+            subtotal = precio_unitario * producto["Cantidad"]
+            items_formateados.append({
+                "No.": producto["No."],
+                "Precio": producto["Precio"],
+                "Cantidad": producto["Cantidad"],
+                "Subtotal": f"${subtotal:.2f}"
+            })
 
-        conexion.commit()
-        return id_ticket
+        # Usar el método crear_venta de ventas.py con los items formateados
+        exito = ventas.crear_venta(id_cliente, id_trabajador, total, items_formateados)
+        
+        if not exito:
+            raise Exception("No se pudo crear la venta")
+            
+        # Obtener el ID del último ticket creado
+        ultimo_id = ventas.obtener_ultimo_numero_venta()
+        return ultimo_id
+        
     except Exception as e:
         print(f"Error al guardar el ticket: {e}")
-        conexion.rollback()
         raise
-    finally:
-        conexion.close()
 
 def generar_ticket(id_ticket, detalles, total, vendedor):
     print("Iniciando la generación del ticket PDF...")
+    print(f"ID del Ticket: {id_ticket}")
     print(f"Total: {total}, Vendedor: {vendedor}")
-    print(f"Detalles: {detalles}")
 
     if not detalles:
         print("Error: La lista de detalles está vacía. No se puede generar el ticket.")
@@ -143,7 +143,7 @@ def generar_ticket(id_ticket, detalles, total, vendedor):
         c = canvas.Canvas(nombre_archivo, pagesize=letter)
         width, height = letter
 
-# Ruta del logo
+        # Ruta del logo
         logo_path = os.path.join(os.path.dirname(__file__), 'assets', 'logo.jpg')
         if os.path.exists(logo_path):
             try:
@@ -160,6 +160,8 @@ def generar_ticket(id_ticket, detalles, total, vendedor):
         c.drawString(200, height - 70, "Dirección: Real de Cadereyta #1009 en Cadereyta Jiménez,")
         c.drawString(200, height - 85, f"Fecha: {datetime.now().strftime('%d/%m/%Y %H:%M:%S')}")
         c.drawString(200, height - 100, f"Vendedor: {vendedor}")
+        # Agregar el número de ticket
+        c.drawString(50, height - 100, f"Ticket #: {id_ticket}")
 
         # Add a decorative line below the header
         c.setStrokeColor(colors.black)
@@ -205,7 +207,6 @@ def generar_ticket(id_ticket, detalles, total, vendedor):
         print(f"Archivo PDF guardado exitosamente: {nombre_archivo}")
 
         # Verificar si el archivo se generó correctamente
-        print("Verificando si el archivo PDF se generó correctamente...")
         if os.path.exists(nombre_archivo):
             print(f"Archivo encontrado: {nombre_archivo}")
             try:
