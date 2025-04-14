@@ -11,7 +11,7 @@ class ventanagraficos(ctk.CTk):
         self.title("Sistema de Gráficos")
         self.cambiar_a_dashboard = cambiar_a_dashboard 
         self.geometry("1920x1080")
-        self.configure(fg_color="#F0F2F5")  # Color de fondo más profesional
+        self.configure(fg_color="#fcf3cf")  
         self.attributes("-fullscreen", True)
 
         # Configuración del grid
@@ -27,12 +27,11 @@ class ventanagraficos(ctk.CTk):
         self.crear_footer()
 
     def crear_encabezado(self):
-        """Crea el encabezado principal con un diseño más moderno."""
-        encabezado = ctk.CTkFrame(self, fg_color="#FFFFFF", height=120, corner_radius=0)
+        encabezado = ctk.CTkFrame(self, fg_color="#f4d03f", height=120, corner_radius=0)
         encabezado.grid(row=0, column=0, columnspan=3, sticky="ew", padx=0, pady=(0, 10))
 
         # Línea decorativa superior
-        franja_superior = ctk.CTkFrame(encabezado, fg_color="#1ABC9C", height=4)
+        franja_superior = ctk.CTkFrame(encabezado, fg_color="#f11919", height=4)
         franja_superior.grid(row=0, column=0, columnspan=3, sticky="ew")
 
         encabezado.grid_columnconfigure(0, weight=1)
@@ -57,7 +56,6 @@ class ventanagraficos(ctk.CTk):
         texto_encabezado.grid(row=1, column=1, padx=10, pady=10)
 
     def crear_frame_botones_y_graficos(self):
-        """Crea un marco moderno para botones y gráficos."""
         # Frame para botones con diseño mejorado
         self.frame_botones = ctk.CTkFrame(self, fg_color="transparent")
         self.frame_botones.grid(row=1, column=0, sticky="ew", padx=40, pady=5)
@@ -70,7 +68,7 @@ class ventanagraficos(ctk.CTk):
             text="Productos Más Vendidos",
             command=self.grafico_productos,
             font=("Helvetica", 16, "bold"),
-            fg_color="#2980B9",
+            fg_color="#F39C12",
             hover_color="#2573A7",
             height=45,
             corner_radius=10,
@@ -83,7 +81,7 @@ class ventanagraficos(ctk.CTk):
             text="Ventas por Trabajador",
             command=self.grafico_trabajadores,
             font=("Helvetica", 16, "bold"),
-            fg_color="#27AE60",
+            fg_color="#f11919",
             hover_color="#229954",
             height=45,
             corner_radius=10,
@@ -97,7 +95,7 @@ class ventanagraficos(ctk.CTk):
             corner_radius=15,
             fg_color="white",
             border_width=1,
-            border_color="#E0E0E0"
+            border_color="white",
         )
         self.frame_graficos.grid(row=2, column=0, sticky="nsew", padx=40, pady=10)
 
@@ -113,8 +111,8 @@ class ventanagraficos(ctk.CTk):
             text="Regresar al Dashboard",
             command=self.cambiar_a_dashboard,
             font=("Helvetica", 16),
-            fg_color="#34495E",
-            hover_color="#2C3E50",
+            fg_color="#F39C12",
+            hover_color="#F39C12",
             height=40,
             corner_radius=10,
             border_spacing=10

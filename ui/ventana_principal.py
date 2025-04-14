@@ -106,14 +106,29 @@ class VentanaPrincipal(ctk.CTk):
 
         actualizar_hora()
 
-        # Etiqueta para el número de venta
+        def actualizar_numero_venta():
+            """Actualiza dinámicamente el número de venta en la etiqueta."""
+            ultimo_numero_venta = ventas.obtener_ultimo_numero_venta()  # Obtiene el último número de la base de datos
+            nuevo_numero_venta = (ultimo_numero_venta or 0) + 1  # Incrementa en 1 para el ticket actual
+            numero_venta_texto = f"No. de Venta: {nuevo_numero_venta}"
+            
+            # Actualiza el texto de la etiqueta
+            etiqueta_numero_venta.configure(text=numero_venta_texto)
+            
+            # Llama a esta misma función después de 5 segundos para actualizar nuevamente
+            info_venta.after(5000, actualizar_numero_venta)
+
+            # Etiqueta inicial para mostrar el número de venta
         etiqueta_numero_venta = ctk.CTkLabel(
             info_venta,
-            text="No. de Venta: 0000000001",
+            text="Cargando número de venta...",
             font=("Arial", 20, "bold"),
             text_color="black"
         )
         etiqueta_numero_venta.grid(row=0, column=3, rowspan=2, padx=10, pady=5, sticky="e")
+
+            # Inicia la actualización automática
+        actualizar_numero_venta()
         
         # Botón de búsqueda
         self.search_button = ctk.CTkButton(

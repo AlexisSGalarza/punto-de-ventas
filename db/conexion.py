@@ -9,12 +9,9 @@ def obtener_conexion():
         password="1234",   # Contraseña
         database="nuevo_ventas"  # Nombre de la base de datos
     )
-    
     if conexion.is_connected():
-        print("¡Conexión exitosa!")
         return conexion
     else:
-        print("Error en la conexión.")
         return None
 
 # Uso de la función
