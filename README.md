@@ -89,6 +89,3 @@ Si deseas contribuir al proyecto:
 4. Push a la rama (`git push origin feature/nueva-caracteristica`)
 5. Crea un Pull Request
 
-## Licencia
-
-Este proyecto está bajo la Licencia [especificar licencia]
