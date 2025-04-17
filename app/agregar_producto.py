@@ -1,5 +1,5 @@
 import customtkinter as ctk
-import app.Productos as db # Asegúrate de que la función de insertar_producto esté definida en el archivo de base de datos
+import app.Productos as db
 from tkinter import messagebox
 
 def agregar_producto(on_close_callback=None):

@@ -3,7 +3,7 @@ import pandas as pd
 import customtkinter as ctk
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from PIL import Image, ImageDraw
-import app.graficos as graficos  # Asegúrate de que este módulo esté en la misma carpeta o ajusta la ruta
+import app.graficos as graficos  
 
 class ventanagraficos(ctk.CTk):
     def __init__(self, cambiar_a_dashboard):
@@ -38,7 +38,7 @@ class ventanagraficos(ctk.CTk):
         encabezado.grid_columnconfigure(1, weight=2)
         encabezado.grid_columnconfigure(2, weight=1)
 
-        # Logo mejorado
+     
         logo_imagen = Image.open("assets/logo.jpg")
         logo_imagen_redondeada = self.redondear_bordes(logo_imagen, radio=75)
         logo_imagen_ctk = ctk.CTkImage(logo_imagen_redondeada, size=(90, 90))

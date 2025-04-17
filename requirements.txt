@@ -1,13 +1,10 @@
-customtkinter
-pandas
-sqlalchemy
-mysql-connector-python
-seaborn
-reportlab
-weasyprint
-os
-
-pip install customtkinter pandas sqlalchemy mysql-connector-python seaborn reportlab weasyprint
+pip install customtkinter 
+pip install pandas 
+pip install sqlalchemy 
+pip install mysql-connector-python 
+pip install seaborn 
+pip install reportlab 
+pip install weasyprint
 pip install pandas
 pip install matplotlib
 pip install tkcalendar

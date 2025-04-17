@@ -1,7 +1,7 @@
 import customtkinter as ctk
 import bcrypt
 from tkinter import messagebox
-import app.trabajadores as db  # Módulo para la interacción con la base de datos.
+import app.trabajadores as db 
 
 def modificartrabajador(id_trabajador, on_close_callback=None):
     """Abre un modal para modificar los datos de un trabajador."""

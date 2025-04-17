@@ -7,8 +7,9 @@ from reportlab.lib.pagesizes import letter
 from reportlab.lib import colors
 from datetime import datetime
 import os
-import ui.ventas as ventas  # Importando el módulo ventas
+import ui.ventas as ventas 
 import app.clientes as db
+import subprocess
 
 class CarritoCompras:
     def __init__(self):
@@ -326,17 +327,22 @@ def generar_ticket(id_ticket, detalles, total, vendedor, es_factura=False, id_cl
         c.save()
         print(f"Archivo PDF generado exitosamente: {nombre_archivo}")
 
-        # Abrir el PDF
-        if os.path.exists(nombre_archivo):
-            try:
-                edge_path = r"C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe"
-                if not os.path.exists(edge_path):
-                    edge_path = r"C:\Program Files\Microsoft\Edge\Application\msedge.exe"
-                if os.path.exists(edge_path):
-                    os.system(f'"{edge_path}" "{os.path.abspath(nombre_archivo)}"')
-            except Exception as e:
-                print(f"Error al abrir el PDF: {e}")
+        #
+        try:
+            edge_path = r"C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe"  # Ruta típica en sistemas de 32 bits
+            if not os.path.exists(edge_path):  # Verificar en sistemas de 64 bits
+                edge_path = r"C:\Program Files\Microsoft\Edge\Application\msedge.exe"
+
+            if os.path.exists(edge_path):  # Si Edge está instalado
+                subprocess.Popen([edge_path, os.path.abspath(nombre_archivo)], shell=True)
+                print("El archivo PDF se ha abierto automáticamente en Microsoft Edge.")
+            else:
+                print("No se encontró Microsoft Edge en las rutas predeterminadas.")
+        except Exception as e:
+            print(f"Error al abrir el PDF: {e}")
+
     except Exception as e:
         print(f"Error al generar el PDF: {e}")
+
 
 

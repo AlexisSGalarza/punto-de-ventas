@@ -10,7 +10,7 @@ from ui.graficos_vista import ventanagraficos
 from globales import AppState
 
 def main():
-    ventana_actual = None  # Variable para rastrear la ventana activa
+    ventana_actual = None  
     app_state = AppState()
 
     def abrir_dashboard():

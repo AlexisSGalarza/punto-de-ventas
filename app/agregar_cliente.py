@@ -1,5 +1,5 @@
 import customtkinter as ctk
-import app.clientes as db  # Asegúrate de que la función de insertar_cliente esté definida en el archivo de base de datos
+import app.clientes as db  
 from tkinter import messagebox
 
 def agregar_cliente(on_close_callback=None):

@@ -17,7 +17,7 @@ def obtener_conexion():
 # Uso de la función
 conexion = obtener_conexion()
 
-# Aquí puedes realizar tus consultas SQL utilizando el objeto `conexion`
+
 
 def guardar_factura(id_ticket, datos_fiscales):
     """
