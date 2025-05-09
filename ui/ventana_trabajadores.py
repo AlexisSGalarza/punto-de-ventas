@@ -4,15 +4,10 @@ import app.agregar_trabajador as at
 import app.modificar_trabajador as mt
 import app.trabajadores as trabajadores_db
 
-class VentanaTrabajadores(ctk.CTk):
-    def __init__(self, cambiar_a_dashboard):
-        super().__init__()
-
-        self.title("👨‍💼 Gestión de Trabajadores - Empleados")
-        self.geometry("1920x1080")
+class VentanaTrabajadores(ctk.CTkFrame):  # Cambiado de CTk a CTkFrame
+    def __init__(self, parent, cambiar_a_dashboard):  # Añadido parent como parámetro
+        super().__init__(parent)  # Pasando parent al constructor
         self.configure(fg_color="#fcf3cf")
-        self.attributes("-fullscreen", True)
-
         self.cambiar_a_dashboard = cambiar_a_dashboard  # Función para regresar al dashboard
 
         self.current_page = 1  # Página actual
@@ -63,12 +58,11 @@ class VentanaTrabajadores(ctk.CTk):
         self.next_button = ctk.CTkButton(self.pagination_frame, text="Siguiente ➡", command=self.next_page, fg_color="white", text_color="black")
         self.next_button.grid(row=0, column=3, padx=5, sticky="e")
 
-
         # Llenar la tabla
         self.populate_table()
 
     def actualizar_tabla(self):
-    # Recupera todos los trabajadores desde la base de datos
+        # Recupera todos los trabajadores desde la base de datos
         self.filtered_trabajadores = trabajadores_db.obtener_trabajadores()
         self.current_page = 1  # Reinicia a la primera página
         self.populate_table()  # Vuelve a llenar la tabla con toda la información
@@ -89,7 +83,6 @@ class VentanaTrabajadores(ctk.CTk):
                 self.actualizar_tabla()  # Actualiza la tabla después de eliminar
             except Exception as e:
                 messagebox.showerror("Error", f"No se pudo eliminar al trabajador: {e}")
-
 
     def crear_encabezado(self):
         """Crea el encabezado principal."""
@@ -123,7 +116,7 @@ class VentanaTrabajadores(ctk.CTk):
     def buscar_trabajador(self):
         """Filtra trabajadores según la búsqueda."""
         query = self.search_entry.get().lower()
-        self.filtered_trabajadores = [t for t in trabajadores_db.obtener_trabajadores() if query in t[1].lower() or query in t[2].lower()   ]
+        self.filtered_trabajadores = [t for t in trabajadores_db.obtener_trabajadores() if query in t[1].lower() or query in t[2].lower()]
         self.current_page = 1
         self.populate_table()
 
@@ -203,7 +196,3 @@ class VentanaTrabajadores(ctk.CTk):
         imagen_redondeada = imagen.convert("RGBA")
         imagen_redondeada.putalpha(mascara)
         return imagen_redondeada
-
-if __name__ == "__main__":
-    app = VentanaTrabajadores()
-    app.mainloop()

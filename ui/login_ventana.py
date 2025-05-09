@@ -4,15 +4,13 @@ import os
 from tkinter import messagebox
 from app.login import autentacacion_login
 
-class VentanaLogin(ctk.CTk):
-    def __init__(self, cambiar_a_principal,app_state):
-        super().__init__()
-        self.title("Login - Abarrotes Gael")
-        self.geometry("1920x1080")
+class VentanaLogin(ctk.CTkFrame):  # Cambiado de CTk a CTkFrame
+    def __init__(self, parent, cambiar_a_dashboard, app_state):  # Cambiado cambiar_a_principal a cambiar_a_dashboard
+        super().__init__(parent)  # Pasando parent al constructor
         self.configure(fg_color="#fcf3cf")
-        self.attributes("-fullscreen", True)
-        self.cambiar_a_principal = cambiar_a_principal
+        self.cambiar_a_dashboard = cambiar_a_dashboard  # Cambiado cambiar_a_principal a cambiar_a_dashboard
         self.app_state = app_state
+        
         # Crear UI
         self.crear_ui()
 
@@ -71,27 +69,29 @@ class VentanaLogin(ctk.CTk):
         boton_login.pack(pady=10)
 
     def iniciar_sesion(self):
-            usuario = self.entry_usuario.get().strip()
-            contrasena = self.entry_contrasena.get().strip()
+        usuario = self.entry_usuario.get().strip()
+        contrasena = self.entry_contrasena.get().strip()
 
-            if not usuario or not contrasena:
-                self.label_mensaje.configure(text="Los campos no pueden estar vacíos", text_color="orange")
-                return
+        if not usuario or not contrasena:
+            self.label_mensaje.configure(text="Los campos no pueden estar vacíos", text_color="orange")
+            return
 
-            try:
-                resultado = autentacacion_login(usuario, contrasena)
-            except Exception as e:
-                self.label_mensaje.configure(text=f"Error: {str(e)}", text_color="red")
-                return
-
+        try:
+            resultado = autentacacion_login(usuario, contrasena)
             if resultado:
                 print(f"Resultado del login: {resultado}")  # Depuración
                 self.app_state.iniciar_sesion(
-                            id=resultado["ID_tr"],  # ID del usuario
-                            usuario=resultado["Nombre_tr"],  # Nombre del usuario
-                            rol=resultado["Rol_tr"]  # Rol del usuario
-                        )
-                self.cambiar_a_principal()
+                    id=resultado["ID_tr"],
+                    usuario=resultado["Nombre_tr"],
+                    rol=resultado["Rol_tr"]
+                )
+                self.entry_usuario.delete(0, 'end')  # Limpiar campos
+                self.entry_contrasena.delete(0, 'end')
+                self.label_mensaje.configure(text="")
+                self.cambiar_a_dashboard()  # Ir directamente al dashboard después de iniciar sesión
             else:
                 self.label_mensaje.configure(text="Usuario o contraseña incorrectos", text_color="red")
+        except Exception as e:
+            print(f"Error en inicio de sesión: {e}")
+            self.label_mensaje.configure(text=f"Error de conexión: {str(e)}", text_color="red")
 

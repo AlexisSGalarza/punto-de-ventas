@@ -5,39 +5,31 @@ from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from PIL import Image, ImageDraw
 import app.graficos as graficos  
 
-class ventanagraficos(ctk.CTk):
-    def __init__(self, cambiar_a_dashboard):
-        super().__init__()
-        self.title("Sistema de Gráficos")
-        self.cambiar_a_dashboard = cambiar_a_dashboard 
-        self.geometry("1920x1080")
-        self.configure(fg_color="#fcf3cf")  
-        self.attributes("-fullscreen", True)
-
-        # Configuración del grid
-        self.grid_rowconfigure(0, weight=1)
-        self.grid_rowconfigure(1, weight=1)
-        self.grid_rowconfigure(2, weight=12)
-        self.grid_rowconfigure(3, weight=1)
+class ventanagraficos(ctk.CTkFrame):
+    def __init__(self, parent, abrir_dashboard):
+        super().__init__(parent)
+        self.configure(fg_color="#fcf3cf")
+        self.abrir_dashboard = abrir_dashboard
+        
+        # Configurar el grid para que ocupe toda la pantalla
+        self.grid(row=0, column=0, sticky="nsew")
+        self.grid_rowconfigure(2, weight=1)  # El frame de gráficos debe expandirse
         self.grid_columnconfigure(0, weight=1)
-
-        # Crear componentes
+        
+        # Crear UI
         self.crear_encabezado()
-        self.crear_frame_botones_y_graficos()
+        self.crear_graficos()
         self.crear_footer()
 
     def crear_encabezado(self):
         encabezado = ctk.CTkFrame(self, fg_color="#f4d03f", height=120, corner_radius=0)
-        encabezado.grid(row=0, column=0, columnspan=3, sticky="ew", padx=0, pady=(0, 10))
+        encabezado.grid(row=0, column=0, sticky="ew", padx=0, pady=(0, 10))
 
         # Línea decorativa superior
         franja_superior = ctk.CTkFrame(encabezado, fg_color="#f11919", height=4)
         franja_superior.grid(row=0, column=0, columnspan=3, sticky="ew")
 
-        encabezado.grid_columnconfigure(0, weight=1)
-        encabezado.grid_columnconfigure(1, weight=2)
-        encabezado.grid_columnconfigure(2, weight=1)
-
+        encabezado.grid_columnconfigure(1, weight=1)
      
         logo_imagen = Image.open("assets/logo.jpg")
         logo_imagen_redondeada = self.redondear_bordes(logo_imagen, radio=75)
@@ -55,7 +47,7 @@ class ventanagraficos(ctk.CTk):
         )
         texto_encabezado.grid(row=1, column=1, padx=10, pady=10)
 
-    def crear_frame_botones_y_graficos(self):
+    def crear_graficos(self):
         # Frame para botones con diseño mejorado
         self.frame_botones = ctk.CTkFrame(self, fg_color="transparent")
         self.frame_botones.grid(row=1, column=0, sticky="ew", padx=40, pady=5)
@@ -95,9 +87,11 @@ class ventanagraficos(ctk.CTk):
             corner_radius=15,
             fg_color="white",
             border_width=1,
-            border_color="white",
+            border_color="gray"
         )
         self.frame_graficos.grid(row=2, column=0, sticky="nsew", padx=40, pady=10)
+        self.frame_graficos.grid_rowconfigure(0, weight=1)
+        self.frame_graficos.grid_columnconfigure(0, weight=1)
 
     def crear_footer(self):
         """Crea un footer moderno."""
@@ -109,7 +103,7 @@ class ventanagraficos(ctk.CTk):
         btn_regresar = ctk.CTkButton(
             footer,
             text="Regresar al Dashboard",
-            command=self.cambiar_a_dashboard,
+            command=self.abrir_dashboard,
             font=("Helvetica", 16),
             fg_color="#F39C12",
             hover_color="#F39C12",
@@ -140,13 +134,14 @@ class ventanagraficos(ctk.CTk):
             print("[DEBUG] No se pudieron obtener datos de productos más vendidos o los datos están vacíos.")
             return
 
-        fig, ax = plt.subplots(figsize=(6, 4))
-        ax.bar(data["Producto"], data["CantidadVendida"], color="deepskyblue")  # Cambié para usar el nombre del producto
-        ax.set_title("Productos Más Vendidos", fontsize=14, fontweight="bold")
-        ax.set_ylabel("Cantidad Vendida")
-        ax.set_xlabel("Producto")  # Cambié para reflejar el nombre del producto
+        fig, ax = plt.subplots(figsize=(12, 8))
+        ax.bar(data["Producto"], data["CantidadVendida"], color="deepskyblue")
+        ax.set_title("Productos Más Vendidos", fontsize=16, fontweight="bold", pad=20)
+        ax.set_ylabel("Cantidad Vendida", fontsize=12)
+        ax.set_xlabel("Producto", fontsize=12)
         ax.tick_params(axis="x", rotation=45)
         ax.grid(axis="y", linestyle="--", alpha=0.7)
+        plt.tight_layout()
 
         self.mostrar_grafico(fig)
 
@@ -157,13 +152,14 @@ class ventanagraficos(ctk.CTk):
             print("No se pudieron obtener datos de ventas por trabajador.")
             return
 
-        fig, ax = plt.subplots(figsize=(6, 4))
-        ax.bar(data["Trabajador"], data["TotalVentas"], color="lightcoral")  # Cambié para usar el nombre del trabajador
-        ax.set_title("Ventas por Trabajador", fontsize=14, fontweight="bold")
-        ax.set_ylabel("Número de Ventas")
-        ax.set_xlabel("Trabajador")  # Cambié para reflejar el nombre del trabajador
+        fig, ax = plt.subplots(figsize=(12, 8))
+        ax.bar(data["Trabajador"], data["TotalVentas"], color="lightcoral")
+        ax.set_title("Ventas por Trabajador", fontsize=16, fontweight="bold", pad=20)
+        ax.set_ylabel("Número de Ventas", fontsize=12)
+        ax.set_xlabel("Trabajador", fontsize=12)
         ax.tick_params(axis="x", rotation=45)
         ax.grid(axis="y", linestyle="--", alpha=0.7)
+        plt.tight_layout()
 
         self.mostrar_grafico(fig)
 
@@ -174,9 +170,3 @@ class ventanagraficos(ctk.CTk):
         draw.ellipse((0, 0, imagen.size[0], imagen.size[1]), fill=255)
         imagen.putalpha(mask)
         return imagen
-
-
-# Ejecutar aplicación
-if __name__ == "__main__":
-    app = ventanagraficos()
-    app.mainloop()

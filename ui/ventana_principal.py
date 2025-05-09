@@ -11,15 +11,12 @@ import ui.ventas as ventas
 import tkinter as tk
 import app.agregar_cliente as ac
 
-class VentanaPrincipal(ctk.CTk):
-    def __init__(self, abrir_dashboard, app_state, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+class VentanaPrincipal(ctk.CTkFrame):  # Cambiado de CTk a CTkFrame
+    def __init__(self, parent, abrir_dashboard, app_state):
+        super().__init__(parent)  # Pasando parent al constructor
         self.abrir_dashboard = abrir_dashboard
         self.app_state = app_state
-        self.title("Abarrotes Gael")
-        self.geometry("1920x1080")
         self.configure(fg_color="#fcf3cf")
-        self.attributes("-fullscreen", True)
         self.carrito = []
         self._pago_completado = tk.BooleanVar(value=False)
         self.pago_exitoso = None
@@ -1054,7 +1051,3 @@ class VentanaPrincipal(ctk.CTk):
         else:
             messagebox.showwarning("Error", "No se ha seleccionado un cliente para la factura.")
             self.mostrar_modal_seleccion_cliente()
-
-if __name__ == "__main__":
-    app = VentanaPrincipal()
-    app.mainloop()

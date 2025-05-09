@@ -9,13 +9,10 @@ from PIL import Image, ImageDraw
 import app.Productos as produ
 import app.graficos as co
 
-class VentanaReportes(ctk.CTk):
-    def __init__(self, abrir_dashboard, abrir_graficosr, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.title("Reportes")
-        self.geometry("1920x1080")
+class VentanaReportes(ctk.CTkFrame):
+    def __init__(self, parent, abrir_dashboard, abrir_graficosr=None):
+        super().__init__(parent)
         self.configure(fg_color="#fcf3cf")
-        self.attributes("-fullscreen", True)
         self.abrir_dashboard = abrir_dashboard
         self.abrir_graficos = abrir_graficosr
         self.crear_ui()

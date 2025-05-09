@@ -1,19 +1,15 @@
-import  customtkinter as ctk
+import customtkinter as ctk
 from PIL import Image, ImageDraw
 import app.agregar_producto as ap
 import app.modificar_producto as mp
 import app.Productos as productos
 from tkinter import messagebox
 
-class productosventana(ctk.CTk):
-    def __init__(self,cambiar_a_dashboard):
-        super().__init__()
-
-        self.title("📦 Tienda de Abarrotes - Inventario")
-        self.geometry("1920x1080")
+class VentanaProductos(ctk.CTkFrame):  # Cambiado de CTk a CTkFrame
+    def __init__(self, parent, abrir_dashboard):  # Añadido parent como parámetro
+        super().__init__(parent)  # Pasando parent al constructor
         self.configure(fg_color="#fcf3cf")
-        self.attributes("-fullscreen", True)
-        self.cambiar_a_dashboard = cambiar_a_dashboard
+        self.abrir_dashboard = abrir_dashboard
 
         self.current_page = 1  # Página actual
         self.items_per_page = 10  # Número de productos por página
@@ -54,7 +50,7 @@ class productosventana(ctk.CTk):
         self.pagination_frame.grid_columnconfigure(1, weight=1)  # Botón "Regresar al Dashboard"
         self.pagination_frame.grid_columnconfigure(2, weight=1)  # Botón "Siguiente"
 
-        self.back_button = ctk.CTkButton(self.pagination_frame, text="🏠 Regresar al Dashboard", command=self.cambiar_a_dashboard, fg_color="#2ecc71", text_color="white")
+        self.back_button = ctk.CTkButton(self.pagination_frame, text="🏠 Regresar al Dashboard", command=self.abrir_dashboard, fg_color="#2ecc71", text_color="white")
         self.back_button.grid(row=0, column=0, padx=5, sticky="w")
 
         self.prev_button = ctk.CTkButton(self.pagination_frame, text="⬅ Anterior", command=self.previous_page, fg_color="white", text_color="black")
@@ -69,7 +65,6 @@ class productosventana(ctk.CTk):
         self.after(200, self.check_stock)   # Verificar el stock de los productos al iniciar la ventana
 
     def actualizar_tabla(self):
-    # Recupera todos los trabajadores desde la base de datos
         self.filtered_productos = productos.obtener_productos()
         self.current_page = 1  # Reinicia a la primera página
         self.populate_table()  # Vuelve a llenar la tabla con toda la información
@@ -81,9 +76,8 @@ class productosventana(ctk.CTk):
         mp.modificar_producto(id_producto, on_close_callback=self.actualizar_tabla)
 
     def eliminar_producto(self, id_producto):
-        from tkinter import messagebox
         if messagebox.askyesno("Confirmar", f"¿Estás seguro de que deseas eliminar al Producto con ID {id_producto}?"):
-            try: # Asegúrate de tener acceso al módulo
+            try:
                 productos.eliminar_producto(id_producto)  # Llama a la función que elimina al trabajador
                 messagebox.showinfo("Éxito", f"El Producto con ID {id_producto} ha sido eliminado.")
                 self.actualizar_tabla()  # Actualiza la tabla después de eliminar
@@ -130,7 +124,7 @@ class productosventana(ctk.CTk):
         ]
         
         self.current_page = 1  # Reinicia la paginación al comenzar una nueva búsqueda
-        self.populate_table()  # Actualiza la tabla con los resultados filtrados # Actualiza la tabla con los resultados filtrados
+        self.populate_table()  # Actualiza la tabla con los resultados filtrados
 
     def populate_table(self):
         """Llena la tabla con los productos filtrados."""
@@ -211,8 +205,3 @@ class productosventana(ctk.CTk):
         imagen_redondeada = imagen.convert("RGBA")
         imagen_redondeada.putalpha(mascara)
         return imagen_redondeada
-
-
-if __name__ == "__main__":
-    app = productosventana()
-    app.mainloop()

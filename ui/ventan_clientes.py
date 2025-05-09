@@ -5,14 +5,11 @@ import app.modificar_cliente as mc
 import app.clientes as db
 import os
 
-class VentanaClientes(ctk.CTk):
-    def __init__(self,cambiar_a_dashboard):
-        super().__init__()
+class VentanaClientes(ctk.CTkFrame):  # Cambiado de CTk a CTkFrame
+    def __init__(self, parent, abrir_dashboard):  # Añadido parent como parámetro
+        super().__init__(parent)  # Pasando parent al constructor
         self.configure(fg_color="#fcf3cf")
-        self.title("Clientes")
-        self.geometry("1920x1080")
-        self.attributes("-fullscreen", True)
-        self.cambiar_a_dashboard = cambiar_a_dashboard
+        self.abrir_dashboard = abrir_dashboard
 
         self.current_page = 1  # Página actual
         self.items_per_page = 10  # Número de clientes por página
@@ -53,7 +50,7 @@ class VentanaClientes(ctk.CTk):
         self.pagination_frame.grid_columnconfigure(1, weight=1)  # Botón "Regresar al Dashboard"
         self.pagination_frame.grid_columnconfigure(2, weight=1)  # Botón "Siguiente"
 
-        self.back_button = ctk.CTkButton(self.pagination_frame, text="🏠 Regresar al Dashboard", command=self.cambiar_a_dashboard, fg_color="#2ecc71", text_color="white")
+        self.back_button = ctk.CTkButton(self.pagination_frame, text="🏠 Regresar al Dashboard", command=self.abrir_dashboard, fg_color="#2ecc71", text_color="white")
         self.back_button.grid(row=0, column=0, padx=5, sticky="w")
 
         self.prev_button = ctk.CTkButton(self.pagination_frame, text="⬅ Anterior", command=self.previous_page, fg_color="white", text_color="black")
@@ -62,12 +59,11 @@ class VentanaClientes(ctk.CTk):
         self.next_button = ctk.CTkButton(self.pagination_frame, text="Siguiente ➡", command=self.next_page, fg_color="white", text_color="black")
         self.next_button.grid(row=0, column=3, padx=5, sticky="e")
 
-
         # Llenar la tabla
         self.populate_table()
 
     def actualizar_tabla(self):
-    # Recupera todos los trabajadores desde la base de datos
+        # Recupera todos los trabajadores desde la base de datos
         self.filtered_clientes = db.obtener_clientes() 
         self.current_page = 1  # Reinicia a la primera página
         self.populate_table()  # Vuelve a llenar la tabla con toda la información

@@ -3,13 +3,11 @@ from PIL import Image, ImageDraw
 from tkinter import messagebox
 from datetime import datetime
 
-class DashboardVista(ctk.CTk):
-    def __init__(self, cambiar_a_clientes, cambiar_a_trabajadores, cambiar_a_login, app_state, cambiar_a_productos, cambiar_a_reportes, cambiar_a_graficos, cambiar_a_principal):
-        super().__init__()
-        self.title("Dashboard - Abarrotes Gael")
-        self.geometry("1920x1080")
+class DashboardVista(ctk.CTkFrame):  # Cambiado de CTk a CTkFrame
+    def __init__(self, parent, cambiar_a_clientes, cambiar_a_trabajadores, cambiar_a_login, app_state, 
+                 cambiar_a_productos, cambiar_a_reportes, cambiar_a_graficos, cambiar_a_principal):
+        super().__init__(parent)  # Pasando parent al constructor
         self.configure(fg_color="#fcf3cf")
-        self.attributes("-fullscreen", True)
         self.cambiar_a_clientes = cambiar_a_clientes
         self.cambiar_a_trabajadores = cambiar_a_trabajadores
         self.cambiar_a_login = cambiar_a_login
@@ -19,11 +17,22 @@ class DashboardVista(ctk.CTk):
         self.app_state = app_state
         self.cambiar_a_principal = cambiar_a_principal
 
-        if not self.app_state.sesion_iniciada:
-            messagebox.showerror("Acceso denegado", "Debe iniciar sesión para acceder al dashboard.")
-            self.cambiar_a_login()
-            return
+        print(f"Estado de sesión al crear dashboard: {self.app_state.sesion_iniciada}")  # Debug
+        print(f"Usuario actual: {self.app_state.usuario_actual}")  # Debug
+        print(f"Rol actual: {self.app_state.rol_actual}")  # Debug
 
+        # Crear la UI inmediatamente si hay una sesión válida
+        if self.app_state.sesion_iniciada:
+            self.crear_ui()
+        else:
+            self.mostrar_error_sesion()
+    
+    def mostrar_error_sesion(self):
+        """Redirecciona al login cuando no hay sesión iniciada"""
+        self.cambiar_a_login()
+
+    def crear_ui(self):
+        """Crea la interfaz completa del dashboard"""
         self.encabezado()
         self.crear_cuadro_botones()
         self.crear_cuadro_inferior()
