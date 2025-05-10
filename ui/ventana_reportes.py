@@ -63,7 +63,7 @@ class VentanaReportes(ctk.CTkFrame):
         # Grid de 2x2 para las tarjetas de reportes
         contenedor.grid_columnconfigure((0,1), weight=1)
         contenedor.grid_rowconfigure((0,1), weight=1)
-
+        
         # Tarjeta 1: Reporte de Inventario
         self.crear_tarjeta_reporte(
             contenedor, 0, 0,
@@ -73,31 +73,31 @@ class VentanaReportes(ctk.CTkFrame):
             self.generar_reporte_inventario
         )
 
-        # Tarjeta 2: Productos con Bajo Stock
+        # Tarjeta 2: Tendencias de Ventas
         self.crear_tarjeta_reporte(
             contenedor, 0, 1,
-            "Productos con Bajo Stock",
-            "Identifica productos que necesitan reabastecimiento",
-            "⚠️",
-            self.generar_reporte_bajo_stock
+            "Tendencias de Ventas",
+            "Análisis de ventas diarias y semanales",
+            "📈",
+            self.generar_reporte_tendencias_ventas
         )
 
-        # Tarjeta 3: Ventas por Categoría
+        # Tarjeta 3: Análisis por Hora
         self.crear_tarjeta_reporte(
             contenedor, 1, 0,
-            "Ventas por Categoría",
-            "Analiza el rendimiento por categoría de productos",
-            "📊",
-            self.generar_reporte_ventas_por_categoria
+            "Análisis por Hora",
+            "Ventas y afluencia por hora del día",
+            "🕒",
+            self.generar_reporte_ventas_por_hora
         )
 
-        # Tarjeta 4: Clientes Frecuentes
+        # Tarjeta 4: Ventas por Trabajador
         self.crear_tarjeta_reporte(
             contenedor, 1, 1,
-            "Clientes Frecuentes",
-            "Identifica y analiza los clientes más leales",
+            "Ventas por Trabajador",
+            "Análisis detallado del desempeño de ventas por trabajador",
             "👥",
-            self.generar_reporte_clientes_frecuentes
+            self.generar_reporte_ventas_trabajador
         )
 
         # Botón para ver gráficos
@@ -154,6 +154,11 @@ class VentanaReportes(ctk.CTkFrame):
             command=comando
         ).grid(row=3, column=0, pady=(0,20))
 
+    def generar_nombre_archivo(self, tipo_reporte):
+        """Genera un nombre de archivo con la fecha y hora actual."""
+        fecha_hora = datetime.now().strftime("%Y%m%d_%H%M%S")
+        return os.path.join(os.getcwd(), "reportes", f"reporte_{tipo_reporte}_{fecha_hora}.xlsx")
+
     def generar_reporte_inventario(self):
         try:
             # Obtener productos de la base de datos
@@ -164,81 +169,148 @@ class VentanaReportes(ctk.CTkFrame):
                 return
 
             # Crear DataFrame con columnas adecuadas
-            columnas = ["ID", "Nombre", "Descripción", "Código de Barras","Codigo de Producto", "Categoría", "Precio", "Stock"]
+            columnas = ["ID", "Nombre", "Descripción", "Código de Barras", "Código de Producto", "Categoría", "Precio", "Stock"]
             df = pd.DataFrame(productos, columns=columnas)
 
-            # Generar nombre del archivo con fecha y hora
-            fecha_hora = datetime.now().strftime("%Y%m%d_%H%M%S")
-            nombre_archivo = os.path.join(os.getcwd(), f"reporte_inventario_{fecha_hora}.xlsx")
-
-            # Guardar en Excel
+            # Guardar en Excel en la carpeta reportes
+            nombre_archivo = self.generar_nombre_archivo("inventario")
             df.to_excel(nombre_archivo, index=False)
-
             messagebox.showinfo("Éxito", f"Reporte generado: {nombre_archivo}")
         except Exception as e:
             messagebox.showerror("Error", f"Error al generar el reporte: {str(e)}")
 
-    def generar_reporte_bajo_stock(self):
+    def generar_reporte_tendencias_ventas(self):
         try:
-            # Obtener productos con bajo stock
-            productos = co.obtener_productos_bajo_stock(umbral=10)  # Umbral de stock bajo
-
-            if not productos:
-                messagebox.showwarning("Sin datos", "No hay productos con bajo stock.")
-                return
-
-            # Crear DataFrame
-            columnas = ["ID", "Nombre", "Stock"]
-            df = pd.DataFrame(productos, columns=columnas)
-
-            # Guardar en Excel
-            fecha_hora = datetime.now().strftime("%Y%m%d_%H%M%S")
-            nombre_archivo = os.path.join(os.getcwd(), f"reporte_bajo_stock_{fecha_hora}.xlsx")
-            df.to_excel(nombre_archivo, index=False)
-
-            messagebox.showinfo("Éxito", f"Reporte generado: {nombre_archivo}")
-        except Exception as e:
-            messagebox.showerror("Error", f"Error al generar el reporte: {str(e)}")
-
-    def generar_reporte_ventas_por_categoria(self):
-        try:
-            # Obtener ventas por categoría
-            ventas = co.obtener_ventas_por_categoria()
+            # Obtener ventas diarias y semanales
+            ventas = co.obtener_tendencias_ventas()
 
             if not ventas:
-                messagebox.showwarning("Sin datos", "No hay datos de ventas por categoría.")
+                messagebox.showwarning("Sin datos", "No hay datos de ventas para analizar.")
                 return
 
-            # Crear DataFrame
-            columnas = ["Categoría", "Total Ventas"]
-            df = pd.DataFrame(ventas, columns=columnas)
+            # Crear DataFrame con los datos
+            df = pd.DataFrame(ventas)
 
-            # Guardar en Excel
-            fecha_hora = datetime.now().strftime("%Y%m%d_%H%M%S")
-            nombre_archivo = os.path.join(os.getcwd(), f"reporte_ventas_categoria_{fecha_hora}.xlsx")
-            df.to_excel(nombre_archivo, index=False)
+            # Agregar análisis semanal
+            df['Semana'] = pd.to_datetime(df['Fecha']).dt.isocalendar().week
+            resumen_semanal = df.groupby('Semana').agg({
+                'TotalVentas': 'sum',
+                'NumeroVentas': 'sum',
+                'TicketPromedio': 'mean'
+            }).reset_index()
+
+            # Guardar en Excel con múltiples hojas
+            nombre_archivo = self.generar_nombre_archivo("tendencias_ventas")
+            
+            with pd.ExcelWriter(nombre_archivo, engine='openpyxl') as writer:
+                df.to_excel(writer, sheet_name='Ventas Diarias', index=False)
+                resumen_semanal.to_excel(writer, sheet_name='Resumen Semanal', index=False)
 
             messagebox.showinfo("Éxito", f"Reporte generado: {nombre_archivo}")
         except Exception as e:
             messagebox.showerror("Error", f"Error al generar el reporte: {str(e)}")
 
-    def generar_reporte_clientes_frecuentes(self):
+    def generar_reporte_ventas_por_hora(self):
         try:
-            # Obtener clientes frecuentes
-            clientes = co.obtener_clientes_frecuentes()
+            # Obtener ventas por hora
+            ventas = co.obtener_ventas_por_hora()
 
-            if not clientes:
-                messagebox.showwarning("Sin datos", "No hay clientes frecuentes registrados.")
+            if not ventas:
+                messagebox.showwarning("Sin datos", "No hay datos de ventas para analizar.")
                 return
 
-            # Crear DataFrame
-            columnas = ["ID Cliente", "Nombre", "Compras Realizadas"]
-            df = pd.DataFrame(clientes, columns=columnas)
+            # Crear DataFrame con los datos
+            df = pd.DataFrame(ventas)
+            
+            # Resumen por hora del día
+            resumen_hora = df.groupby('Hora').agg({
+                'NumTransacciones': 'sum',
+                'TotalVentas': 'sum',
+                'TicketPromedio': 'mean',
+                'NumClientes': 'sum',
+                'ProductosVendidos': 'sum'
+            }).round(2)
+            
+            # Calcular métricas adicionales
+            total_ventas = resumen_hora['TotalVentas'].sum()
+            resumen_hora['% del Total de Ventas'] = (resumen_hora['TotalVentas'] / total_ventas * 100).round(2)
+            resumen_hora['Productos por Transacción'] = (resumen_hora['ProductosVendidos'] / resumen_hora['NumTransacciones']).round(2)
+            
+            # Identificar horas pico
+            resumen_hora['Es Hora Pico'] = resumen_hora['NumTransacciones'] > resumen_hora['NumTransacciones'].mean()
+            
+            # Tendencia por día y hora
+            tendencia_diaria = df.pivot_table(
+                index='Fecha',
+                columns='Hora',
+                values=['TotalVentas', 'NumTransacciones'],
+                aggfunc='sum'
+            ).fillna(0)
 
-            # Guardar en Excel
-            fecha_hora = datetime.now().strftime("%Y%m%d_%H%M%S")
-            nombre_archivo = os.path.join(os.getcwd(), f"reporte_clientes_frecuentes_{fecha_hora}.xlsx")
-            df.to_excel(nombre_archivo, index=False)
+            # Guardar en Excel con múltiples hojas
+            nombre_archivo = self.generar_nombre_archivo("ventas_por_hora")
+            
+            with pd.ExcelWriter(nombre_archivo, engine='openpyxl') as writer:
+                resumen_hora.to_excel(writer, sheet_name='Resumen por Hora')
+                tendencia_diaria.to_excel(writer, sheet_name='Tendencia Diaria')
+                df.to_excel(writer, sheet_name='Datos Detallados', index=False)
+
+            messagebox.showinfo("Éxito", f"Reporte generado: {nombre_archivo}")
+        except Exception as e:
+            messagebox.showerror("Error", f"Error al generar el reporte: {str(e)}")
+
+    def generar_reporte_ventas_trabajador(self):
+        try:
+            # Obtener ventas por trabajador
+            ventas = co.obtener_ventas_por_trabajador()
+
+            if not ventas:
+                messagebox.showwarning("Sin datos", "No hay datos de ventas por trabajador para analizar.")
+                return
+
+            # Crear DataFrame con los datos
+            df = pd.DataFrame(ventas)
+            
+            # Resumen por trabajador
+            resumen_trabajador = df.groupby('Trabajador').agg({
+                'NumVentas': 'sum',
+                'TotalVentas': 'sum',
+                'PromedioVenta': 'mean',
+                'NumClientes': 'sum',
+                'ProductosVendidos': 'sum'
+            }).round(2)
+            
+            # Calcular métricas adicionales con validación para división por cero
+            resumen_trabajador['Venta por Cliente'] = 0.0  # Valor predeterminado
+            mask = resumen_trabajador['NumClientes'] > 0
+            if mask.any():
+                resumen_trabajador.loc[mask, 'Venta por Cliente'] = (
+                    resumen_trabajador.loc[mask, 'TotalVentas'] / 
+                    resumen_trabajador.loc[mask, 'NumClientes']
+                ).round(2)
+
+            total_ventas = resumen_trabajador['TotalVentas'].sum()
+            resumen_trabajador['% del Total de Ventas'] = 0.0  # Valor predeterminado
+            if total_ventas > 0:
+                resumen_trabajador['% del Total de Ventas'] = (
+                    resumen_trabajador['TotalVentas'] / total_ventas * 100
+                ).round(2)
+            
+            # Tendencia diaria por trabajador
+            tendencia_diaria = df.pivot_table(
+                index='Fecha',
+                columns='Trabajador',
+                values=['TotalVentas', 'NumVentas'],
+                aggfunc='sum'
+            ).fillna(0)
+
+            # Guardar en Excel con múltiples hojas
+            nombre_archivo = self.generar_nombre_archivo("ventas_trabajador")
+            
+            with pd.ExcelWriter(nombre_archivo, engine='openpyxl') as writer:
+                resumen_trabajador.to_excel(writer, sheet_name='Resumen por Trabajador')
+                tendencia_diaria.to_excel(writer, sheet_name='Tendencia Diaria')
+                df.to_excel(writer, sheet_name='Datos Detallados', index=False)
 
             messagebox.showinfo("Éxito", f"Reporte generado: {nombre_archivo}")
         except Exception as e:

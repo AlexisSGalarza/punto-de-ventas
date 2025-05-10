@@ -148,19 +148,36 @@ class ventanagraficos(ctk.CTkFrame):
     def grafico_trabajadores(self):
         """Crea y muestra el gráfico de ventas por trabajador usando el módulo graficos."""
         data = graficos.obtener_ventas_por_trabajador()
-        if data is None or data.empty:
+        if data is None:
             print("No se pudieron obtener datos de ventas por trabajador.")
             return
 
-        fig, ax = plt.subplots(figsize=(12, 8))
-        ax.bar(data["Trabajador"], data["TotalVentas"], color="lightcoral")
-        ax.set_title("Ventas por Trabajador", fontsize=16, fontweight="bold", pad=20)
-        ax.set_ylabel("Número de Ventas", fontsize=12)
-        ax.set_xlabel("Trabajador", fontsize=12)
-        ax.tick_params(axis="x", rotation=45)
-        ax.grid(axis="y", linestyle="--", alpha=0.7)
-        plt.tight_layout()
+        # Convertir los datos a DataFrame
+        df = pd.DataFrame(data)
 
+        if df.empty:
+            print("No hay datos de ventas por trabajador para mostrar.")
+            return
+
+        # Agrupar por trabajador y sumar las ventas totales
+        resumen = df.groupby('Trabajador')['TotalVentas'].sum().sort_values(ascending=False)
+
+        fig, ax = plt.subplots(figsize=(12, 8))
+        bars = ax.bar(resumen.index, resumen.values, color="#f11919")
+        ax.set_title("Ventas Totales por Trabajador", fontsize=16, fontweight="bold", pad=20)
+        ax.set_ylabel("Total de Ventas ($)", fontsize=12)
+        ax.set_xlabel("Trabajador", fontsize=12)
+        ax.tick_params(axis="x", rotation=45, labelsize=10)
+        ax.grid(axis="y", linestyle="--", alpha=0.7)
+
+        # Agregar etiquetas de valor en las barras
+        for bar in bars:
+            height = bar.get_height()
+            ax.text(bar.get_x() + bar.get_width()/2., height,
+                   f'${height:,.2f}',
+                   ha='center', va='bottom', rotation=0)
+
+        plt.tight_layout()
         self.mostrar_grafico(fig)
 
     def redondear_bordes(self, imagen, radio):

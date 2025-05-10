@@ -1,35 +1,35 @@
 import mysql.connector
 import pandas as pd
-import db.conexion as co  # Usa tu módulo de conexión existente
+from datetime import datetime, timedelta
+import db.conexion as co
 
-def obtener_ventas_por_trabajador():
-    """Consulta el número de ventas y los ingresos totales por trabajador."""
-    conn = co.obtener_conexion()  # Conexión utilizando tu módulo de conexión
+def obtener_tendencias_ventas():
+    """Consulta las ventas diarias y semanales."""
+    conn = co.obtener_conexion()
     if conn is None:
         print("No se pudo establecer conexión con la base de datos.")
         return None
     try:
         query = """
         SELECT 
-            t.Nombre_tr AS Trabajador,  -- Obtenemos el nombre del trabajador desde la tabla trabajadores
-            COUNT(*) AS TotalVentas,
-            SUM(ti.Total_ti) AS TotalIngresos
+            DATE(Fecha_Hora_ti) as Fecha,
+            SUM(Total_ti) as TotalVentas,
+            COUNT(*) as NumeroVentas,
+            AVG(Total_ti) as TicketPromedio
         FROM 
-            tickets ti
-        JOIN 
-            trabajadores t ON ti.ID_tr_ti = t.ID_tr  -- Relacionamos tickets con trabajadores
+            tickets
         WHERE 
-            ti.Estado_ti = 'Completado'
+            Estado_ti = 'Completado'
+            AND Fecha_Hora_ti >= DATE_SUB(CURRENT_DATE, INTERVAL 30 DAY)
         GROUP BY 
-            t.Nombre_tr
+            DATE(Fecha_Hora_ti)
         ORDER BY 
-            TotalVentas DESC;
+            Fecha DESC;
         """
         cursor = conn.cursor(dictionary=True)
         cursor.execute(query)
-        resultados = cursor.fetchall()
-        return pd.DataFrame(resultados)  # Convierte resultados en un DataFrame
-    except mysql.connector.Error as e:
+        return cursor.fetchall()
+    except Exception as e:
         print(f"Error al consultar la base de datos: {e}")
         return None
     finally:
@@ -37,7 +37,6 @@ def obtener_ventas_por_trabajador():
             cursor.close()
         if conn:
             conn.close()
-
 
 def obtener_productos_mas_vendidos():
     """Consulta los productos más vendidos desde la tabla detalles_venta."""
@@ -74,9 +73,8 @@ def obtener_productos_mas_vendidos():
         if conn:
             conn.close()
 
-
-def obtener_productos_bajo_stock(umbral=10):
-    """Consulta los productos con stock por debajo de un umbral."""
+def obtener_ventas_por_trabajador():
+    """Obtiene estadísticas detalladas de ventas por trabajador."""
     conn = co.obtener_conexion()
     if conn is None:
         print("No se pudo establecer conexión con la base de datos.")
@@ -84,56 +82,29 @@ def obtener_productos_bajo_stock(umbral=10):
     try:
         query = """
         SELECT 
-            ID_pr AS ID, 
-            Nombre_pr AS Nombre, 
-            Stock_pr AS Stock
+            CONCAT(t.Nombre_tr, ' ', t.Apellido_tr) as Trabajador,
+            DATE(ti.Fecha_Hora_ti) as Fecha,
+            COUNT(DISTINCT ti.ID_ti) as NumVentas,
+            SUM(ti.Total_ti) as TotalVentas,
+            AVG(ti.Total_ti) as PromedioVenta,
+            COUNT(DISTINCT ti.ID_cl_ti) as NumClientes,
+            SUM(dv.Cantidad_dv) as ProductosVendidos
         FROM 
-            productos
+            tickets ti
+            JOIN trabajadores t ON ti.ID_tr_ti = t.ID_tr
+            LEFT JOIN detalles_venta dv ON ti.ID_ti = dv.ID_ti_dv
         WHERE 
-            Stock_pr < %s
-        ORDER BY 
-            Stock_pr ASC;
-        """
-        cursor = conn.cursor(dictionary=True)
-        cursor.execute(query, (umbral,))
-        resultados = cursor.fetchall()
-        return resultados
-    except mysql.connector.Error as e:
-        print(f"Error al consultar la base de datos: {e}")
-        return None
-    finally:
-        if cursor:
-            cursor.close()
-        if conn:
-            conn.close()
-
-def obtener_ventas_por_categoria():
-    """Consulta las ventas agrupadas por categoría de producto."""
-    conn = co.obtener_conexion()
-    if conn is None:
-        print("No se pudo establecer conexión con la base de datos.")
-        return None
-    try:
-        query = """
-        SELECT 
-            c.Nombre_cat AS Categoria, 
-            SUM(dv.Cantidad_dv * p.Precio_pr) AS TotalVentas
-        FROM 
-            detalles_venta dv
-        JOIN 
-            productos p ON dv.ID_pr_dv = p.ID_pr
-        JOIN 
-            categorias c ON p.ID_cat_pr = c.ID_cat
+            ti.Estado_ti = 'Completado'
+            AND ti.Fecha_Hora_ti >= DATE_SUB(CURRENT_DATE, INTERVAL 30 DAY)
         GROUP BY 
-            c.Nombre_cat
+            t.ID_tr, DATE(ti.Fecha_Hora_ti)
         ORDER BY 
-            TotalVentas DESC;
+            Fecha DESC, TotalVentas DESC;
         """
         cursor = conn.cursor(dictionary=True)
         cursor.execute(query)
-        resultados = cursor.fetchall()
-        return resultados
-    except mysql.connector.Error as e:
+        return cursor.fetchall()
+    except Exception as e:
         print(f"Error al consultar la base de datos: {e}")
         return None
     finally:
@@ -142,8 +113,8 @@ def obtener_ventas_por_categoria():
         if conn:
             conn.close()
 
-def obtener_clientes_frecuentes():
-    """Consulta los clientes con más compras realizadas."""
+def obtener_ventas_por_hora():
+    """Obtiene estadísticas detalladas de ventas por hora del día."""
     conn = co.obtener_conexion()
     if conn is None:
         print("No se pudo establecer conexión con la base de datos.")
@@ -151,26 +122,29 @@ def obtener_clientes_frecuentes():
     try:
         query = """
         SELECT 
-            c.ID_cl AS IDCliente, 
-            c.Nombre_cl AS Nombre, 
-            COUNT(t.ID_cl_ti) AS ComprasRealizadas
+            DATE(t.Fecha_Hora_ti) as Fecha,
+            HOUR(t.Fecha_Hora_ti) as Hora,
+            COUNT(t.ID_ti) as NumTransacciones,
+            SUM(t.Total_ti) as TotalVentas, 
+            AVG(t.Total_ti) as TicketPromedio,
+            COUNT(DISTINCT t.ID_cl_ti) as NumClientes,
+            SUM(dv.Cantidad_dv) as ProductosVendidos
         FROM 
             tickets t
-        JOIN 
-            clientes c ON t.ID_cl_ti = c.ID_cl
+            LEFT JOIN detalles_venta dv ON t.ID_ti = dv.ID_ti_dv
         WHERE 
             t.Estado_ti = 'Completado'
+            AND t.Fecha_Hora_ti >= DATE_SUB(CURRENT_DATE, INTERVAL 30 DAY)
         GROUP BY 
-            c.ID_cl, c.Nombre_cl
+            DATE(t.Fecha_Hora_ti),
+            HOUR(t.Fecha_Hora_ti)
         ORDER BY 
-            ComprasRealizadas DESC
-        LIMIT 10;
+            Fecha DESC, Hora ASC;
         """
         cursor = conn.cursor(dictionary=True)
         cursor.execute(query)
-        resultados = cursor.fetchall()
-        return resultados
-    except mysql.connector.Error as e:
+        return cursor.fetchall()
+    except Exception as e:
         print(f"Error al consultar la base de datos: {e}")
         return None
     finally:
